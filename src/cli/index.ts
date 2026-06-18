@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import type { HabicronOptions, Period, Schedule } from '../core'
+import type { HabitOptions, Period, Schedule } from '../core'
 /**
  * habicron — CLI.
  *
@@ -12,7 +12,7 @@ import type { HabicronOptions, Period, Schedule } from '../core'
  */
 import { spawn } from 'node:child_process'
 import process from 'node:process'
-import { createHabicron } from '../core'
+import { createHabit } from '../core'
 
 export const VERSION = '0.2.0'
 
@@ -100,8 +100,8 @@ export function parseArgs(argv: string[]): ParseResult {
   return { args }
 }
 
-/** Build {@link HabicronOptions} from parsed CLI args, or return an error. */
-export function toOptions(args: CliArgs): { options?: HabicronOptions, error?: string } {
+/** Build {@link HabitOptions} from parsed CLI args, or return an error. */
+export function toOptions(args: CliArgs): { options?: HabitOptions, error?: string } {
   let schedule: Schedule | null = null
   if (args.every != null) {
     schedule = { every: args.every, ...(args.jitter != null ? { jitter: args.jitter } : {}) }
@@ -176,7 +176,7 @@ export async function main(argv: string[]): Promise<number> {
   }
 
   await new Promise<void>((resolve) => {
-    const job = createHabicron(async () => {
+    const job = createHabit(async () => {
       const at = new Date().toLocaleTimeString()
       process.stdout.write(`[habicron] ${at} → ${args.command.join(' ')}\n`)
       await runCommand(args.command)

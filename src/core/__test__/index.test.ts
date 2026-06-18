@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createHabicron, dur, longTimeout, normalize, resolveJitter } from '../index'
+import { createHabit, dur, longTimeout, normalize, resolveJitter } from '../index'
 
 describe('dur', () => {
   it('passes numbers through as milliseconds', () => {
@@ -78,13 +78,13 @@ describe('longTimeout', () => {
   })
 })
 
-describe('createHabicron', () => {
+describe('createHabit', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
   it('fires evenly with no jitter and counts each fire', async () => {
     const cb = vi.fn()
-    const job = createHabicron(cb, { every: '10s' })
+    const job = createHabit(cb, { every: '10s' })
     await vi.advanceTimersByTimeAsync(35_000)
     expect(cb).toHaveBeenCalledTimes(3)
     expect(job.counter).toBe(3)
@@ -93,7 +93,7 @@ describe('createHabicron', () => {
   it('does not drift over many fires (grid-anchored)', async () => {
     const cb = vi.fn()
     const start = Date.now()
-    createHabicron(cb, { every: '10s', jitter: '4s', random: () => 0.99 })
+    createHabit(cb, { every: '10s', jitter: '4s', random: () => 0.99 })
     await vi.advanceTimersByTimeAsync(100_000)
     const elapsed = Date.now() - start
     // 10 fires nominally; with bounded jitter the count stays near the grid rate.
@@ -104,14 +104,14 @@ describe('createHabicron', () => {
 
   it('fires immediately when requested', async () => {
     const cb = vi.fn()
-    const job = createHabicron(cb, { every: '10s', immediate: true })
+    const job = createHabit(cb, { every: '10s', immediate: true })
     expect(cb).toHaveBeenCalledTimes(1)
     expect(job.counter).toBe(1)
   })
 
   it('stays inert when autoStart is false until start()', async () => {
     const cb = vi.fn()
-    const job = createHabicron(cb, { every: '10s', autoStart: false })
+    const job = createHabit(cb, { every: '10s', autoStart: false })
     await vi.advanceTimersByTimeAsync(30_000)
     expect(cb).not.toHaveBeenCalled()
     expect(job.isActive).toBe(false)
@@ -122,7 +122,7 @@ describe('createHabicron', () => {
 
   it('pauses and resumes', async () => {
     const cb = vi.fn()
-    const job = createHabicron(cb, { every: '10s' })
+    const job = createHabit(cb, { every: '10s' })
     await vi.advanceTimersByTimeAsync(10_000)
     expect(cb).toHaveBeenCalledTimes(1)
     job.pause()
@@ -136,7 +136,7 @@ describe('createHabicron', () => {
 
   it('reset zeroes the counter', async () => {
     const cb = vi.fn()
-    const job = createHabicron(cb, { every: '10s' })
+    const job = createHabit(cb, { every: '10s' })
     await vi.advanceTimersByTimeAsync(20_000)
     expect(job.counter).toBe(2)
     job.reset()
@@ -149,7 +149,7 @@ describe('createHabicron', () => {
     const seq = [0.999, /* sign */ 0.1, 0.999, 0.1, 0.999, 0.1]
     let i = 0
     const random = () => seq[i++ % seq.length]
-    createHabicron(cb, { every: '10s', jitter: '100s', random })
+    createHabit(cb, { every: '10s', jitter: '100s', random })
     // first target = anchor + 10s - cap(4.9s) = ~5.1s
     await vi.advanceTimersByTimeAsync(5_000)
     expect(cb).not.toHaveBeenCalled()
@@ -159,7 +159,7 @@ describe('createHabicron', () => {
 
   it('fires the union of multiple habits', async () => {
     const cb = vi.fn()
-    createHabicron(cb, { habits: [{ every: '10s' }, { every: '15s' }] })
+    createHabit(cb, { habits: [{ every: '10s' }, { every: '15s' }] })
     await vi.advanceTimersByTimeAsync(30_000)
     // 10,20,30 + 15,30 = 5 fires (two land at 30s)
     expect(cb.mock.calls.length).toBe(5)
@@ -169,7 +169,7 @@ describe('createHabicron', () => {
     const cb = vi.fn(() => {
       throw new Error('boom')
     })
-    const job = createHabicron(cb, { every: '10s' })
+    const job = createHabit(cb, { every: '10s' })
     await vi.advanceTimersByTimeAsync(20_000)
     expect(job.counter).toBe(2)
     expect(cb).toHaveBeenCalledTimes(2)
@@ -177,7 +177,7 @@ describe('createHabicron', () => {
 
   it('notifies subscribers on state change', async () => {
     const listener = vi.fn()
-    const job = createHabicron(() => {}, { every: '10s' })
+    const job = createHabit(() => {}, { every: '10s' })
     const unsub = job.subscribe(listener)
     await vi.advanceTimersByTimeAsync(10_000)
     expect(listener).toHaveBeenCalled()

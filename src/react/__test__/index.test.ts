@@ -1,15 +1,15 @@
 import { act, renderHook } from '@testing-library/react'
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useHabicron, useRandomCronjob } from '../index'
+import { useHabit } from '../index'
 
-describe('useHabicron (react)', () => {
+describe('useHabit (react)', () => {
   beforeEach(() => vi.useFakeTimers())
   afterEach(() => vi.useRealTimers())
 
   it('returns plain values that increment as the callback fires', async () => {
     const cb = vi.fn()
-    const { result } = renderHook(() => useHabicron(cb, { every: '10s' }))
+    const { result } = renderHook(() => useHabit(cb, { every: '10s' }))
     expect(result.current.counter).toBe(0)
     await act(async () => {
       await vi.advanceTimersByTimeAsync(20_000)
@@ -19,14 +19,14 @@ describe('useHabicron (react)', () => {
   })
 
   it('omits control members unless controls: true', () => {
-    const { result } = renderHook(() => useHabicron(() => {}, { every: '1h' }))
+    const { result } = renderHook(() => useHabit(() => {}, { every: '1h' }))
     expect('pause' in result.current).toBe(false)
   })
 
   it('exposes controls when requested', async () => {
     const cb = vi.fn()
     const { result } = renderHook(() =>
-      useHabicron(cb, { controls: true, every: '10s' }),
+      useHabit(cb, { controls: true, every: '10s' }),
     )
     expect(result.current.isActive).toBe(true)
     await act(async () => {
@@ -39,15 +39,11 @@ describe('useHabicron (react)', () => {
 
   it('stops timers on unmount', async () => {
     const cb = vi.fn()
-    const { unmount } = renderHook(() => useHabicron(cb, { every: '10s' }))
+    const { unmount } = renderHook(() => useHabit(cb, { every: '10s' }))
     unmount()
     await act(async () => {
       await vi.advanceTimersByTimeAsync(30_000)
     })
     expect(cb).not.toHaveBeenCalled()
-  })
-
-  it('keeps useRandomCronjob as a deprecated alias', () => {
-    expect(useRandomCronjob).toBe(useHabicron)
   })
 })

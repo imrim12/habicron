@@ -57,9 +57,9 @@ Durations are numbers (ms) or strings of `<num><unit>` tokens — units:
 Headless: you drive the controller.
 
 ```ts
-import { createHabicron } from 'habicron'
+import { createHabit } from 'habicron'
 
-const job = createHabicron(() => syncFeed(), { every: '15m ± 2m' })
+const job = createHabit(() => syncFeed(), { every: '15m ± 2m' })
 
 job.counter   // times fired
 job.nextRun   // Date of the next fire, or null
@@ -70,7 +70,7 @@ job.stop()
 process.on('SIGINT', () => { job.stop(); process.exit(0) })
 ```
 
-`createHabicron(callback, options)` returns a `HabicronController`:
+`createHabit(callback, options)` returns a `HabitController`:
 `{ counter, isActive, nextRun, start, stop, pause, resume, reset, subscribe }`.
 
 Useful option flags: `immediate` (fire once on start), `autoStart` (default
@@ -81,9 +81,9 @@ deterministic behavior/tests).
 
 ```vue
 <script setup lang="ts">
-import { useHabicron } from 'habicron/vue'
+import { useHabit } from 'habicron/vue'
 
-const { counter, nextRun, pause, resume } = useHabicron(post, {
+const { counter, nextRun, pause, resume } = useHabit(post, {
   controls: true,
   every: '20s ± 4s',
 })
@@ -101,10 +101,10 @@ const { counter, nextRun, pause, resume } = useHabicron(post, {
 ## React
 
 ```tsx
-import { useHabicron } from 'habicron/react'
+import { useHabit } from 'habicron/react'
 
 function Reminder() {
-  const { counter, nextRun, pause } = useHabicron(
+  const { counter, nextRun, pause } = useHabit(
     () => notify('Drink water'),
     { controls: true, every: '1h ± 8m' },
   )
@@ -115,13 +115,10 @@ function Reminder() {
 React returns plain values (not refs) and is SSR-safe (the controller is created
 inside an effect).
 
-> The hook is `useHabicron`. The old name `useRandomCronjob` still works as a
-> deprecated alias — prefer `useHabicron` in new code.
-
 ## Multiple habits
 
 ```ts
-useHabicron(runAgent, {
+useHabit(runAgent, {
   controls: true,
   habits: [
     { every: '2h ± 20m' },                   // check the cat

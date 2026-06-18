@@ -50,9 +50,9 @@ units: `ms s m h d w mo y`. Jitter sign is always random.
 ## Node
 
 ```ts
-import { createHabicron } from 'habicron'
+import { createHabit } from 'habicron'
 
-const job = createHabicron(() => syncFeed(), { every: '15m ± 2m' })
+const job = createHabit(() => syncFeed(), { every: '15m ± 2m' })
 
 job.counter // times fired
 job.nextRun // Date of the next fire, or null
@@ -67,9 +67,9 @@ process.on('SIGINT', () => { job.stop(); process.exit(0) })
 
 ```vue
 <script setup lang="ts">
-import { useHabicron } from 'habicron/vue'
+import { useHabit } from 'habicron/vue'
 
-const { counter, nextRun, pause, resume } = useHabicron(post, {
+const { counter, nextRun, pause, resume } = useHabit(post, {
   controls: true,
   every: '20s ± 4s',
 })
@@ -83,15 +83,14 @@ const { counter, nextRun, pause, resume } = useHabicron(post, {
 
 `counter`, `nextRun` and `isActive` are readonly refs. Control members
 (`pause`, `resume`, `reset`, `isActive`) appear only when `controls: true`.
-`useHabicron` is the hook; `useRandomCronjob` remains as a deprecated alias.
 
 ## React
 
 ```tsx
-import { useHabicron } from 'habicron/react'
+import { useHabit } from 'habicron/react'
 
 function Reminder() {
-  const { counter, nextRun, pause } = useHabicron(
+  const { counter, nextRun, pause } = useHabit(
     () => notify('Drink water'),
     { controls: true, every: '1h ± 8m' },
   )
@@ -110,7 +109,7 @@ effect, so it is SSR-safe; the callback is always read fresh.
 ## Multiple habits
 
 ```ts
-useHabicron(runAgent, {
+useHabit(runAgent, {
   controls: true,
   habits: [
     { every: '2h ± 20m' }, // check the cat
@@ -143,10 +142,10 @@ habicron --every 1h --immediate --max 5 -- ./backup.sh
 
 ## API
 
-`createHabicron(callback, options)` → `HabicronController`
+`createHabit(callback, options)` → `HabitController`
 
 ```ts
-interface HabicronController {
+interface HabitController {
   readonly counter: number
   readonly isActive: boolean
   readonly nextRun: Date | null

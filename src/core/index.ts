@@ -7,7 +7,7 @@
  * rate stays exact — accurate by default, optionally jittered with no drift.
  *
  * This module has no framework or platform dependencies. The Vue, React, Node
- * and CLI entry points are thin adapters over {@link createHabicron}.
+ * and CLI entry points are thin adapters over {@link createHabit}.
  */
 
 // ---------------------------------------------------------------------------
@@ -83,10 +83,10 @@ export interface ControlFlags {
 }
 
 /** A single inline schedule, or an explicit list of overlapping habits. */
-export type HabicronOptions = ControlFlags & (Schedule | { habits: Schedule[] })
+export type HabitOptions = ControlFlags & (Schedule | { habits: Schedule[] })
 
 /** The reactive surface every adapter maps onto its own primitives. */
-export interface HabicronController {
+export interface HabitController {
   /** Total number of times the callback has fired. */
   readonly counter: number
   /** Whether timers are currently running. */
@@ -210,14 +210,14 @@ interface Task extends Spec {
  * Create a framework-agnostic habit scheduler.
  *
  * @example
- * const job = createHabicron(() => console.log('tick'), { every: '2h ± 5m' })
+ * const job = createHabit(() => console.log('tick'), { every: '2h ± 5m' })
  * job.pause()
  */
-export function createHabicron(
+export function createHabit(
   callback: () => void | Promise<void>,
-  options: HabicronOptions,
-): HabicronController {
-  const opts = options ?? ({} as HabicronOptions)
+  options: HabitOptions,
+): HabitController {
+  const opts = options ?? ({} as HabitOptions)
   const { immediate = false, autoStart = true, random = Math.random } = opts
 
   const list = 'habits' in opts && Array.isArray(opts.habits) ? opts.habits : [opts as Schedule]

@@ -5,12 +5,10 @@ import type { Schedule } from '../core'
  * Wraps the core engine in React state. Unlike the Vue adapter (which exposes
  * refs), this returns plain values that re-render the component on each change.
  * The controller is created inside `useEffect`, so it is naturally SSR-safe.
- *
- * `useHabicron` is the hook; the old name `useRandomCronjob` is kept as a
- * deprecated alias for backward compatibility.
+ * The hook is `useHabit`.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createHabicron } from '../core'
+import { createHabit } from '../core'
 
 export type { Duration, Jitter, Period, Schedule } from '../core'
 
@@ -24,16 +22,16 @@ export interface ReactControlFlags {
 }
 
 /** A single inline schedule, or an explicit list of overlapping habits. */
-export type UseHabicronOptions = ReactControlFlags & (Schedule | { habits: Schedule[] })
+export type UseHabitOptions = ReactControlFlags & (Schedule | { habits: Schedule[] })
 
-export interface HabicronBase {
+export interface HabitBase {
   /** Total number of times the callback has fired. */
   counter: number
   /** Earliest upcoming fire across all habits, or `null` when stopped. */
   nextRun: Date | null
 }
 
-export interface HabicronControls {
+export interface HabitControls {
   isActive: boolean
   pause: () => void
   resume: () => void
@@ -42,8 +40,8 @@ export interface HabicronControls {
 }
 
 /** Control members exist only when `controls: true` is passed. */
-export type UseHabicronReturn<O extends UseHabicronOptions>
-  = HabicronBase & (O extends { controls: true } ? HabicronControls : unknown)
+export type UseHabitReturn<O extends UseHabitOptions>
+  = HabitBase & (O extends { controls: true } ? HabitControls : unknown)
 
 interface State {
   counter: number
@@ -61,15 +59,15 @@ interface State {
  * always read fresh, so closing over changing props is safe.
  *
  * @example
- * const { counter, nextRun, pause } = useHabicron(act, {
+ * const { counter, nextRun, pause } = useHabit(act, {
  *   controls: true,
  *   every: '20s ± 4s',
  * })
  */
-export function useHabicron<const O extends UseHabicronOptions>(
+export function useHabit<const O extends UseHabitOptions>(
   callback: () => void | Promise<void>,
   options: O,
-): UseHabicronReturn<O> {
+): UseHabitReturn<O> {
   const callbackRef = useRef(callback)
   callbackRef.current = callback
 
@@ -80,10 +78,10 @@ export function useHabicron<const O extends UseHabicronOptions>(
   optionsRef.current = options
 
   const [state, setState] = useState<State>({ counter: 0, isActive: false, nextRun: null })
-  const controlRef = useRef<ReturnType<typeof createHabicron> | null>(null)
+  const controlRef = useRef<ReturnType<typeof createHabit> | null>(null)
 
   useEffect(() => {
-    const ctrl = createHabicron(async () => callbackRef.current(), {
+    const ctrl = createHabit(async () => callbackRef.current(), {
       ...(optionsRef.current as Schedule & ReactControlFlags),
       autoStart: true,
     })
@@ -110,7 +108,7 @@ export function useHabicron<const O extends UseHabicronOptions>(
 
   const base = { counter: state.counter, nextRun: state.nextRun }
   if (!options?.controls)
-    return base as UseHabicronReturn<O>
+    return base as UseHabitReturn<O>
 
   return {
     ...base,
@@ -120,13 +118,3 @@ export function useHabicron<const O extends UseHabicronOptions>(
     reset,
   }
 }
-
-/**
- * @deprecated Renamed to {@link useHabicron}. Kept for backward compatibility.
- */
-export const useRandomCronjob = useHabicron
-
-/** @deprecated Renamed to {@link UseHabicronOptions}. */
-export type UseRandomCronjobOptions = UseHabicronOptions
-/** @deprecated Renamed to {@link UseHabicronReturn}. */
-export type UseRandomCronjobReturn<O extends UseHabicronOptions> = UseHabicronReturn<O>

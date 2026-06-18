@@ -3,16 +3,16 @@
  *
  * The default, framework-free surface. In Node (servers, workers, scripts)
  * there are no reactive primitives to bind to, so you drive the
- * {@link HabicronController} directly.
+ * {@link HabitController} directly.
  *
  * @example
- * import { createHabicron } from 'habicron'
+ * import { createHabit } from 'habicron'
  *
- * const job = createHabicron(() => fetchFeed(), { every: '15m ± 2m' })
+ * const job = createHabit(() => fetchFeed(), { every: '15m ± 2m' })
  * process.on('SIGINT', () => { job.stop(); process.exit(0) })
  */
 export {
-  createHabicron,
+  createHabit,
   dur,
   longTimeout,
   normalize,
@@ -22,11 +22,9 @@ export {
 export type {
   ControlFlags,
   Duration,
-  HabicronController,
-  HabicronOptions,
+  HabitController,
+  HabitOptions,
   Jitter,
   Period,
   Schedule,
 } from '../core'
-
-export { createHabicron as habicron } from '../core'

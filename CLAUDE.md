@@ -35,8 +35,8 @@ core controller.
 src/
   core/   index.ts + __test__/   # the engine — types + scheduler, no deps
   node/   index.ts + __test__/   # default entry: re-exports core, headless
-  vue/    index.ts + __test__/   # Vue adapter — useHabicron (refs)
-  react/  index.ts + __test__/   # React adapter — useHabicron (state)
+  vue/    index.ts + __test__/   # Vue adapter — useHabit (refs)
+  react/  index.ts + __test__/   # React adapter — useHabit (state)
   cli/    index.ts + __test__/   # `habicron` binary (runs a shell command)
 skills/habicron/SKILL.md         # agent skill describing how to use habicron
 public/index.html                # self-contained landing page (no framework)
@@ -85,7 +85,7 @@ small named function.
    `MAX_DELAY` (2^31-1 ms ≈ 24.8 days). Returns a cancel function. Exists because
    a raw `setTimeout` with a larger delay **fires immediately** — the `month`,
    `year`, and long-interval habits depend on this.
-6. **`createHabicron(callback, options)`** — the engine/controller:
+6. **`createHabit(callback, options)`** — the engine/controller:
    - Builds `specs` from `options.habits ?? [options]` → `normalize` → filter.
    - Each `task` carries `{ intervalMs, jitter, anchor, count, nextTs, cancel }`.
    - **`schedule(t)`**: `target = t.anchor + t.count * t.intervalMs + offset(t)`.
@@ -107,15 +107,15 @@ small named function.
 
 ### Adapters
 
-- **`src/node`** — re-exports the core surface (`createHabicron`, `dur`,
-  `normalize`, `resolveJitter`, `longTimeout`) plus a `habicron` alias. Headless;
-  the caller drives the controller.
-- **`src/vue`** — `useHabicron` (+ deprecated `useRandomCronjob` alias). Creates
-  a controller with `autoStart: typeof window !== 'undefined'`, mirrors its state
-  into `readonly` refs via `subscribe`, and disposes on scope teardown.
-- **`src/react`** — `useHabicron` (+ deprecated `useRandomCronjob` alias). Creates
-  the controller inside `useEffect` (so it's SSR-safe), mirrors state into
-  `useState`, and stops it on unmount. Returns **plain values**, not refs.
+- **`src/node`** — re-exports the core surface (`createHabit`, `dur`,
+  `normalize`, `resolveJitter`, `longTimeout`). Headless; the caller drives the
+  controller.
+- **`src/vue`** — `useHabit`. Creates a controller with
+  `autoStart: typeof window !== 'undefined'`, mirrors its state into `readonly`
+  refs via `subscribe`, and disposes on scope teardown.
+- **`src/react`** — `useHabit`. Creates the controller inside `useEffect` (so
+  it's SSR-safe), mirrors state into `useState`, and stops it on unmount.
+  Returns **plain values**, not refs.
 - **`src/cli`** — `parseArgs` / `toOptions` / `main`. Parses flags, builds a
   schedule, and spawns a shell command on each fire. `parseArgs` and `toOptions`
   are exported pure functions so they can be unit-tested without spawning.
@@ -129,7 +129,7 @@ unbuild generates the `.d.ts` per entry. When the public API changes, write the
 types first, then make the implementation conform.
 
 - **Core** (`src/core`) is the type source of truth: `Duration`, `Jitter`,
-  `Period`, `Schedule`, `ControlFlags`, `HabicronOptions`, `HabicronController`.
+  `Period`, `Schedule`, `ControlFlags`, `HabitOptions`, `HabitController`.
 - **`Schedule`** is a discriminated union with `never` guards so `every` and
   `times`/`per` are mutually exclusive at compile time. Preserve that.
 - **Adapters** define their own return types because their shapes differ:
@@ -138,8 +138,8 @@ types first, then make the implementation conform.
     `controls: true` using the **`const O` type parameter**. Without `const`, TS
     widens `controls: true` to `boolean` and the members leak into every call.
     Do not remove `const`.
-- Keep the export surface small. Each adapter exports `useHabicron` and the
-  deprecated `useRandomCronjob` alias; do not add more without reason.
+- Keep the export surface small. Each adapter exports a single `useHabit`; do
+  not add aliases or extra exports without reason.
 
 ---
 
@@ -186,9 +186,10 @@ These are load-bearing. Each maps to a real failure if removed.
   `normalize()` — do not scatter it through the engine.
 - Naming mirrors the domain: `habit`, `every`, `jitter`, `nextRun`, `counter`.
   Keep user-facing names in product terms, not implementation terms.
-- `useHabicron` is the composable/hook name in Vue and React; `useRandomCronjob`
-  is kept as a deprecated alias for backward compatibility. Keep both — don't
-  remove the alias, and don't rename `useHabicron` in place.
+- `useHabit` is the composable/hook name in Vue and React, and `createHabit` is
+  the core/Node factory. These are the single canonical names — there are no
+  legacy aliases (no `createHabicron`/`useHabicron`/`useRandomCronjob`). Don't
+  add backward-compat aliases; this is a clean, pre-release API.
 
 ---
 
@@ -237,7 +238,7 @@ The engine is timer-driven, so tests must control time and randomness.
 - **Add a duration unit:** add to `UNIT`, insert into the `TOKEN` alternation in
   the correct longest-first position, add a parser test in `src/core/__test__`.
 - **Add a scheduling option:** edit the types in `src/core` (extend `Schedule`
-  or `ControlFlags`), implement in `createHabicron`, then surface through the
+  or `ControlFlags`), implement in `createHabit`, then surface through the
   adapters if user-facing.
 - **Add a returned value to an adapter:** add it to that adapter's return type
   and back it from the controller via `subscribe`.

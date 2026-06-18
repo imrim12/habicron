@@ -46,6 +46,15 @@
 
   .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
 
+  /* ---------- overflow safety ----------
+     Grid/flex children default to min-width:auto, which lets a wide <pre>
+     push the whole layout past the viewport on mobile. Letting them shrink to
+     0 makes the code blocks scroll *inside* their card instead. */
+  .hero-grid > *,
+  .ex-grid > * { min-width: 0; }
+  .term, .term-shell, .card { min-width: 0; max-width: 100%; }
+  pre.code, .card pre, .cmd { max-width: 100%; }
+
   /* ---------- nav ---------- */
   .nav {
     position: sticky; top: 0; z-index: 50;
@@ -237,6 +246,25 @@
   .card pre .t { color: var(--green-bright); }
   .card pre .p { color: var(--faint); }
 
+  /* ---------- use cases ---------- */
+  .use-grid {
+    display: grid; gap: 20px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .uc-list { list-style: none; padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 13px; }
+  .uc-list li {
+    position: relative; padding-left: 22px;
+    color: var(--dim); font-size: 14.5px; line-height: 1.5;
+  }
+  .uc-list li::before {
+    content: "▸"; position: absolute; left: 0; top: 0; color: var(--green);
+  }
+  .uc-list li b {
+    color: var(--green-bright); font-weight: 500;
+    font-family: var(--mono); font-size: 12.5px;
+    white-space: nowrap;
+  }
+
   footer {
     border-top: 1px solid var(--border-soft); padding: 40px 0;
     font-family: var(--mono); font-size: 12.5px; color: var(--faint);
@@ -250,6 +278,7 @@
     .hero-grid { grid-template-columns: 1fr; gap: 40px; }
     .nav-links { display: none; }
     .ex-grid { grid-template-columns: 1fr; }
+    .use-grid { grid-template-columns: 1fr; }
     .hero { padding: 56px 0 40px; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -264,6 +293,7 @@
     <div class="nav-links">
       <a href="#install">Install</a>
       <a href="#examples">Examples</a>
+      <a href="#use-cases">Use cases</a>
       <a href="https://github.com/imrim12/habicron#readme">API</a>
     </div>
     <div class="nav-right">
@@ -302,16 +332,16 @@
           <span class="fname">habits.ts</span>
           <span class="live"><span class="pulse"></span>live</span>
         </div>
-<pre class="code"><span class="k">import</span> { <span class="f">useHabicron</span> } <span class="k">from</span> <span class="s">'habicron/vue'</span>
+<pre class="code"><span class="k">import</span> { <span class="f">useHabit</span> } <span class="k">from</span> <span class="s">'habicron/vue'</span>
 
 <span class="c">// remind me to drink water every hour</span>
-<span class="f">useHabicron</span>(drinkWater, { every<span class="p">:</span> <span class="s">'1h ± 8m'</span> })
+<span class="f">useHabit</span>(drinkWater, { every<span class="p">:</span> <span class="s">'1h ± 8m'</span> })
 
 <span class="c">// check my cat every 2 hours</span>
-<span class="f">useHabicron</span>(checkCat, { every<span class="p">:</span> <span class="s">'2h ± 20m'</span> })
+<span class="f">useHabit</span>(checkCat, { every<span class="p">:</span> <span class="s">'2h ± 20m'</span> })
 
 <span class="c">// a whole routine, with controls</span>
-<span class="k">const</span> { nextRun, pause } <span class="p">=</span> <span class="f">useHabicron</span>(routine, {
+<span class="k">const</span> { nextRun, pause } <span class="p">=</span> <span class="f">useHabit</span>(routine, {
   controls<span class="p">:</span> <span class="k">true</span>,
   habits<span class="p">:</span> [
     { every<span class="p">:</span> <span class="s">'20s'</span>, jitter<span class="p">:</span> [<span class="s">'3s'</span>, <span class="s">'5s'</span>] },
@@ -354,7 +384,7 @@
   <div class="wrap">
     <div class="sec-head">
       <div class="eyebrow">Examples</div>
-      <h2>Three ways to use it</h2>
+      <h2>Four ways to use it</h2>
     </div>
     <div class="ex-grid">
 
@@ -363,10 +393,10 @@
           <span class="label">node</span>
           <button class="copy ex-copy">Copy</button>
         </div>
-<pre><span class="k">import</span> { <span class="f">createHabicron</span> } <span class="k">from</span> <span class="s">'habicron'</span>
+<pre><span class="k">import</span> { <span class="f">createHabit</span> } <span class="k">from</span> <span class="s">'habicron'</span>
 
 <span class="c">// poll a feed, roughly every 15 min</span>
-<span class="k">const</span> job <span class="p">=</span> <span class="f">createHabicron</span>(syncFeed, {
+<span class="k">const</span> job <span class="p">=</span> <span class="f">createHabit</span>(syncFeed, {
   every<span class="p">:</span> <span class="s">'15m ± 2m'</span>,
 })</pre>
       </div>
@@ -376,9 +406,9 @@
           <span class="label">react</span>
           <button class="copy ex-copy">Copy</button>
         </div>
-<pre><span class="k">import</span> { <span class="f">useHabicron</span> } <span class="k">from</span> <span class="s">'habicron/react'</span>
+<pre><span class="k">import</span> { <span class="f">useHabit</span> } <span class="k">from</span> <span class="s">'habicron/react'</span>
 
-<span class="f">useHabicron</span>(runAgent, {
+<span class="f">useHabit</span>(runAgent, {
   controls<span class="p">:</span> <span class="k">true</span>,
   habits<span class="p">:</span> [
     { every<span class="p">:</span> <span class="s">'2h ± 20m'</span> },        <span class="c">// check the cat</span>
@@ -390,11 +420,26 @@
 
       <div class="card wide">
         <div class="card-head">
+          <span class="label">cli — run any command on a habit</span>
+          <button class="copy ex-copy">Copy</button>
+        </div>
+<pre><span class="c"># stretch reminder, roughly every 10 minutes</span>
+<span class="p">$</span> habicron --every <span class="s">"10m ± 2m"</span> -- notify-send <span class="s">"Stretch break"</span>
+
+<span class="c"># pull a repo a few times a day, nicely spread out</span>
+<span class="p">$</span> habicron --times 3 --per day --jitter 2h -- git pull
+
+<span class="c"># scrape a page hourly, jittered so you don't look like a bot</span>
+<span class="p">$</span> habicron --every 1h --jitter 12m -- node scrape.js</pre>
+      </div>
+
+      <div class="card wide">
+        <div class="card-head">
           <span class="label">vue — read it in your template</span>
           <button class="copy ex-copy">Copy</button>
         </div>
 <pre><span class="p">&lt;</span><span class="t">script setup lang="ts"</span><span class="p">&gt;</span>
-<span class="k">const</span> { counter, nextRun, pause, resume } <span class="p">=</span> <span class="f">useHabicron</span>(post, {
+<span class="k">const</span> { counter, nextRun, pause, resume } <span class="p">=</span> <span class="f">useHabit</span>(post, {
   controls<span class="p">:</span> <span class="k">true</span>,
   every<span class="p">:</span> <span class="s">'20s ± 4s'</span>,
 })
@@ -404,6 +449,68 @@
   <span class="p">&lt;</span><span class="t">p</span><span class="p">&gt;</span>fired {{ counter }}× · next at {{ nextRun?.toLocaleTimeString() }}<span class="p">&lt;/</span><span class="t">p</span><span class="p">&gt;</span>
   <span class="p">&lt;</span><span class="t">button</span> @click="pause"<span class="p">&gt;</span>Pause<span class="p">&lt;/</span><span class="t">button</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="t">template</span><span class="p">&gt;</span></pre>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<section id="use-cases">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Use cases</div>
+      <h2>Give your software a daily rhythm</h2>
+    </div>
+    <div class="use-grid">
+
+      <div class="card">
+        <div class="card-head">
+          <span class="label">AI agents</span>
+        </div>
+        <ul class="uc-list">
+          <li>Review and improve your memory <b>every 2h</b></li>
+          <li>Re-read the project goals <b>every 30m ± 5m</b></li>
+          <li>Summarize what changed in the repo <b>2× / day</b></li>
+          <li>Touch base with the user <b>every 90m, jittered</b></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="label">Smart CLI tools</span>
+        </div>
+        <ul class="uc-list">
+          <li>Scout a shopping site for sales <b>every 1h</b></li>
+          <li>Pull the repo and rebuild <b>3× / day</b></li>
+          <li>Back up to object storage <b>every 6h ± 30m</b></li>
+          <li>Run the test suite while you focus <b>every 45m</b></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="label">Web apps</span>
+        </div>
+        <ul class="uc-list">
+          <li>Check my cat from the camera <b>every 5m</b></li>
+          <li>Refresh the live dashboard <b>every 20s ± 4s</b></li>
+          <li>Autosave the draft <b>roughly every 1m</b></li>
+          <li>Nudge "drink water" <b>every 1h ± 8m</b></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="label">Servers &amp; workers</span>
+        </div>
+        <ul class="uc-list">
+          <li>Poll a webhook source <b>every 90s, jittered</b></li>
+          <li>Warm the cache <b>4× / day</b></li>
+          <li>Reconcile with the upstream API <b>every 15m ± 2m</b></li>
+          <li>Sweep stale sessions <b>every 1h</b></li>
+        </ul>
       </div>
 
     </div>
