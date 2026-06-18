@@ -1,3 +1,4 @@
+import type { Schedule } from '../core'
 /**
  * habicron — React adapter.
  *
@@ -6,7 +7,7 @@
  * The controller is created inside `useEffect`, so it is naturally SSR-safe.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createHabicron, type Schedule } from '../core'
+import { createHabicron } from '../core'
 
 export type { Duration, Jitter, Period, Schedule } from '../core'
 
@@ -38,8 +39,8 @@ export interface RandomCronjobControls {
 }
 
 /** Control members exist only when `controls: true` is passed. */
-export type UseRandomCronjobReturn<O extends UseRandomCronjobOptions> =
-  RandomCronjobBase & (O extends { controls: true } ? RandomCronjobControls : {})
+export type UseRandomCronjobReturn<O extends UseRandomCronjobOptions>
+  = RandomCronjobBase & (O extends { controls: true } ? RandomCronjobControls : unknown)
 
 interface State {
   counter: number
@@ -70,9 +71,8 @@ export function useRandomCronjob<const O extends UseRandomCronjobOptions>(
   callbackRef.current = callback
 
   // Snapshot options once — re-runs only when the serialised schedule changes.
-  const optionsKey = JSON.stringify(options, (_k, v) =>
-    typeof v === 'function' ? undefined : v,
-  )
+  const optionsKey = JSON.stringify(options, (_k: string, v: unknown) =>
+    typeof v === 'function' ? undefined : v)
   const optionsRef = useRef(options)
   optionsRef.current = options
 
@@ -80,13 +80,18 @@ export function useRandomCronjob<const O extends UseRandomCronjobOptions>(
   const controlRef = useRef<ReturnType<typeof createHabicron> | null>(null)
 
   useEffect(() => {
-    const ctrl = createHabicron(() => callbackRef.current(), {
+    const ctrl = createHabicron(async () => callbackRef.current(), {
       ...(optionsRef.current as Schedule & ReactControlFlags),
       autoStart: true,
     })
     controlRef.current = ctrl
-    const sync = () =>
+    const sync = () => {
+      // Intentional: this is an external-store subscription. The controller is
+      // the source of truth; we mirror its state into React on every change and
+      // once on mount (it has already started before we subscribed).
+      // eslint-disable-next-line react/set-state-in-effect
       setState({ counter: ctrl.counter, isActive: ctrl.isActive, nextRun: ctrl.nextRun })
+    }
     const unsubscribe = ctrl.subscribe(sync)
     sync()
     return () => {
@@ -94,7 +99,6 @@ export function useRandomCronjob<const O extends UseRandomCronjobOptions>(
       ctrl.stop()
       controlRef.current = null
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [optionsKey])
 
   const pause = useCallback(() => controlRef.current?.pause(), [])
@@ -102,7 +106,8 @@ export function useRandomCronjob<const O extends UseRandomCronjobOptions>(
   const reset = useCallback(() => controlRef.current?.reset(), [])
 
   const base = { counter: state.counter, nextRun: state.nextRun }
-  if (!options?.controls) return base as UseRandomCronjobReturn<O>
+  if (!options?.controls)
+    return base as UseRandomCronjobReturn<O>
 
   return {
     ...base,
@@ -110,7 +115,7 @@ export function useRandomCronjob<const O extends UseRandomCronjobOptions>(
     pause,
     resume,
     reset,
-  } as UseRandomCronjobReturn<O>
+  }
 }
 
 /** Preferred alias of {@link useRandomCronjob}, matching the package name. */

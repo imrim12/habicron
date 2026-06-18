@@ -35,7 +35,7 @@ const MAX_DELAY = 2_147_483_647
 
 // duration units, longest tokens first so the regex never mis-matches
 const UNIT: Record<string, number> = { ms: 1, sec: S, min: M, mo: MO, hr: H, w: W, s: S, m: M, h: H, d: D, y: Y }
-const TOKEN = /(\d+(?:\.\d+)?)\s*(ms|sec|min|mo|hr|s|m|h|d|w|y)/g
+const TOKEN = /(\d+(?:\.\d+)?)\s*(ms|sec|min|mo|hr|[smhdwy])/g
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -50,10 +50,10 @@ export type Duration = number | string
  * - `[min, max]`    → bounded magnitude             e.g. `['3s', '5s']`
  * - `{ min?, max }` → bounded magnitude, object form
  */
-export type Jitter =
-  | Duration
-  | [min: Duration, max: Duration]
-  | { min?: Duration; max: Duration }
+export type Jitter
+  = | Duration
+    | [min: Duration, max: Duration]
+    | { min?: Duration, max: Duration }
 
 export type Period = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'
 
@@ -63,9 +63,9 @@ export type Period = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'
  *
  * `every` also accepts a packed form: `'2h ± 5m'` (cadence ± max jitter).
  */
-export type Schedule =
-  | { every: Duration; jitter?: Jitter; times?: never; per?: never }
-  | { times: number; per: Period; jitter?: Jitter; every?: never }
+export type Schedule
+  = | { every: Duration, jitter?: Jitter, times?: never, per?: never }
+    | { times: number, per: Period, jitter?: Jitter, every?: never }
 
 export interface ControlFlags {
   /** Fire once immediately on start (counts toward `counter`). */
@@ -113,12 +113,18 @@ export interface HabicronController {
 
 /** Parse a duration: number (ms) or string like `'2h'`, `'1h30m'`, `'500ms'`. */
 export function dur(v: Duration): number {
-  if (typeof v === 'number') return v
-  if (typeof v !== 'string') return 0
+  if (typeof v === 'number')
+    return v
+  if (typeof v !== 'string')
+    return 0
   let total = 0
   let match: RegExpExecArray | null
   TOKEN.lastIndex = 0
-  while ((match = TOKEN.exec(v))) total += parseFloat(match[1]) * UNIT[match[2]]
+  match = TOKEN.exec(v)
+  while (match != null) {
+    total += Number.parseFloat(match[1]) * UNIT[match[2]]
+    match = TOKEN.exec(v)
+  }
   return total
 }
 
@@ -129,12 +135,14 @@ interface JitterRange {
 
 /** Normalise a jitter spec into a `{ min, max }` magnitude range in ms, or null. */
 export function resolveJitter(j?: Jitter): JitterRange | null {
-  if (j == null) return null
+  if (j == null)
+    return null
   if (typeof j === 'number' || typeof j === 'string') {
     const max = dur(j)
     return max > 0 ? { min: 0, max } : null
   }
-  if (Array.isArray(j)) return { min: dur(j[0]), max: dur(j[1]) }
+  if (Array.isArray(j))
+    return { min: dur(j[0]), max: dur(j[1]) }
   return { min: dur(j.min ?? 0), max: dur(j.max) }
 }
 
@@ -151,11 +159,14 @@ export function normalize(s: Schedule): Spec | null {
     if (typeof s.every === 'string' && /[±~]/.test(s.every)) {
       const [cadence, j] = s.every.split(/[±~]/)
       intervalMs = dur(cadence.trim())
-      if (!jitter) jitter = resolveJitter(j.trim())
-    } else {
+      if (!jitter)
+        jitter = resolveJitter(j.trim())
+    }
+    else {
       intervalMs = dur(s.every)
     }
-  } else if ('times' in s && s.times && s.per && PERIOD[s.per]) {
+  }
+  else if ('times' in s && s.times && s.per && PERIOD[s.per]) {
     intervalMs = PERIOD[s.per] / s.times
   }
   return intervalMs > 0 && Number.isFinite(intervalMs) ? { intervalMs, jitter } : null
@@ -167,10 +178,12 @@ export function longTimeout(fn: () => void, delay: number): () => void {
   let remaining = Math.max(0, delay)
   let cancelled = false
   const step = () => {
-    if (cancelled) return
+    if (cancelled)
+      return
     if (remaining <= MAX_DELAY) {
       handle = setTimeout(fn, remaining)
-    } else {
+    }
+    else {
       remaining -= MAX_DELAY
       handle = setTimeout(step, MAX_DELAY)
     }
@@ -209,7 +222,7 @@ export function createHabicron(
 
   const list = 'habits' in opts && Array.isArray(opts.habits) ? opts.habits : [opts as Schedule]
   const specs = list.map(normalize).filter((s): s is Spec => s != null)
-  const tasks: Task[] = specs.map((spec) => ({ ...spec, anchor: 0, count: 0, nextTs: null, cancel: null }))
+  const tasks: Task[] = specs.map(spec => ({ ...spec, anchor: 0, count: 0, nextTs: null, cancel: null }))
 
   let counter = 0
   let isActive = false
@@ -224,7 +237,10 @@ export function createHabicron(
 
   const recomputeNext = () => {
     let min: number | null = null
-    for (const t of tasks) if (t.nextTs != null && (min == null || t.nextTs < min)) min = t.nextTs
+    for (const t of tasks) {
+      if (t.nextTs != null && (min == null || t.nextTs < min))
+        min = t.nextTs
+    }
     nextRun = min == null ? null : new Date(min)
   }
 
@@ -233,17 +249,21 @@ export function createHabicron(
     notify()
     try {
       const r = callback()
-      if (r && typeof (r as Promise<void>).then === 'function') (r as Promise<void>).catch(() => {})
-    } catch {
+      if (r && typeof (r).then === 'function')
+        (r).catch(() => {})
+    }
+    catch {
       // swallow so a throwing callback never kills the schedule
     }
   }
 
   const offset = (t: Task) => {
-    if (!t.jitter) return 0
+    if (!t.jitter)
+      return 0
     let mag = randBetween(t.jitter.min, t.jitter.max)
     const cap = t.intervalMs * 0.49 // never let jitter reorder adjacent fires
-    if (mag > cap) mag = cap
+    if (mag > cap)
+      mag = cap
     return (random() < 0.5 ? -1 : 1) * mag
   }
 
@@ -255,12 +275,14 @@ export function createHabicron(
     notify()
     t.cancel = longTimeout(() => {
       fire()
-      if (isActive) schedule(t)
+      if (isActive)
+        schedule(t)
     }, target - Date.now())
   }
 
   const start = (runImmediate = false) => {
-    if (isActive) return
+    if (isActive)
+      return
     const now = Date.now()
     for (const t of tasks) {
       t.anchor = now
@@ -268,7 +290,8 @@ export function createHabicron(
     }
     isActive = true
     notify()
-    if (runImmediate) fire()
+    if (runImmediate)
+      fire()
     for (const t of tasks) schedule(t)
   }
 
@@ -284,10 +307,12 @@ export function createHabicron(
   }
 
   const pause = () => {
-    if (isActive) stop()
+    if (isActive)
+      stop()
   }
   const resume = () => {
-    if (!isActive) start(false)
+    if (!isActive)
+      start(false)
   }
   const reset = () => {
     counter = 0
@@ -305,7 +330,8 @@ export function createHabicron(
     }
   }
 
-  if (autoStart) start(immediate)
+  if (autoStart)
+    start(immediate)
 
   return {
     get counter() {

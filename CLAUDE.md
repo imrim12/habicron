@@ -161,6 +161,16 @@ These are load-bearing. Each maps to a real failure if removed.
 
 ## 6. Conventions
 
+- **Lint:** `@antfu/eslint-config`, strict, with **type-aware** rules enabled
+  (`tsconfigPath`). `pnpm lint` must be clean (zero warnings) before commit.
+  Config lives in `eslint.config.mjs`.
+- **Vue vs React are scoped, never global.** Framework auto-detection is off.
+  React rules (`react-hooks`, `@eslint-react`) apply only to `src/react/**`
+  (they matter on the plain-`.ts` hook file). The `eslint-plugin-vue` config is
+  scoped to `**/*.vue` SFCs; the current Vue adapter is a `.ts` composable and
+  is covered by the strict type-aware TS rules instead — do **not** route `.ts`
+  through `vue-eslint-parser`, that disables type-aware linting. The core, node
+  and cli code is framework-free.
 - Style: 2-space indent, no semicolons, single quotes, `const`-first. Match the
   existing files. Do not reformat unrelated code.
 - Source is TypeScript (`strict`). Keep `dur`, `resolveJitter`, `normalize`,
@@ -181,6 +191,8 @@ These are load-bearing. Each maps to a real failure if removed.
 
 ```sh
 pnpm install        # deps (vue/react/unbuild/vitest are dev/peer only)
+pnpm lint           # eslint . --max-warnings 0  — must pass before commit
+pnpm lint:fix       # eslint . --fix
 pnpm typecheck      # tsc --noEmit  — must pass before commit
 pnpm test           # vitest run
 pnpm test:watch     # vitest

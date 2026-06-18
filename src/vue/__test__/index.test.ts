@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { isReadonly } from 'vue'
-import { useRandomCronjob, useHabicron } from '../index'
+import { useHabicron, useRandomCronjob } from '../index'
 
 describe('useRandomCronjob (vue)', () => {
   beforeEach(() => vi.useFakeTimers())
@@ -51,7 +51,8 @@ describe('useRandomCronjob (vue)', () => {
       await vi.advanceTimersByTimeAsync(30_000)
       expect(cb).not.toHaveBeenCalled()
       expect(counter.value).toBe(0)
-    } finally {
+    }
+    finally {
       globalThis.window = original
     }
   })
