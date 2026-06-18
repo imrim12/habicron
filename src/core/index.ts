@@ -73,6 +73,10 @@ export type Schedule
     | { times: number, per: Period, jitter?: Jitter, every?: never }
 
 export interface ControlFlags {
+  /** Stable identifier for the registry. Auto-generated when omitted. */
+  id?: string
+  /** Human-friendly label shown by management tooling (`listHabits`, the CLI). */
+  name?: string
   /** Fire once immediately on start (counts toward `counter`). */
   immediate?: boolean
   /**
@@ -92,6 +96,10 @@ export type HabitOptions = ControlFlags & (Schedule | { habits: Schedule[] })
 
 /** The reactive surface every adapter maps onto its own primitives. */
 export interface HabitController {
+  /** Stable identifier in the registry. */
+  readonly id: string
+  /** Human-friendly label, or `undefined`. */
+  readonly name: string | undefined
   /** Total number of times the callback has fired. */
   readonly counter: number
   /** Whether timers are currently running. */
@@ -108,8 +116,21 @@ export interface HabitController {
   resume: () => void
   /** Reset `counter` to 0 and, if active, restart all habits from now. */
   reset: () => void
+  /** Replace the schedule (and optionally the `name`); reschedules in place. */
+  update: (options: HabitOptions) => void
+  /** Stop all timers and remove this habit from the registry. */
+  destroy: () => void
   /** Subscribe to state changes; returns an unsubscribe function. */
   subscribe: (listener: () => void) => () => void
+}
+
+/** A plain, serialisable snapshot of a habit's state (for listing UIs). */
+export interface HabitSummary {
+  id: string
+  name: string | undefined
+  isActive: boolean
+  counter: number
+  nextRun: Date | null
 }
 
 // ---------------------------------------------------------------------------
@@ -211,8 +232,52 @@ interface Task extends Spec {
   cancel: (() => void) | null
 }
 
+function buildTasks(o: HabitOptions): Task[] {
+  const list = 'habits' in o && Array.isArray(o.habits) ? o.habits : [o as Schedule]
+  const specs = list.map(normalize).filter((s): s is Spec => s != null)
+  return specs.map(spec => ({ ...spec, anchor: 0, count: 0, nextTs: null, cancel: null }))
+}
+
+// ---------------------------------------------------------------------------
+// Registry — track live habits so they can be listed / updated / removed.
+// This is the in-process management surface (the CLI has its own durable store).
+// ---------------------------------------------------------------------------
+
+let seq = 0
+const registry = new Map<string, HabitController>()
+const registryListeners = new Set<() => void>()
+
+function notifyRegistry() {
+  for (const l of registryListeners) l()
+}
+
+/** Every registered habit (active or paused), in creation order. */
+export function listHabits(): HabitController[] {
+  return [...registry.values()]
+}
+
+/** Look up a registered habit by its id. */
+export function getHabit(id: string): HabitController | undefined {
+  return registry.get(id)
+}
+
+/** Subscribe to registry changes (a habit added or removed). Returns unsubscribe. */
+export function subscribeHabits(listener: () => void): () => void {
+  registryListeners.add(listener)
+  return () => {
+    registryListeners.delete(listener)
+  }
+}
+
+/** Destroy every registered habit (stops timers and empties the registry). */
+export function clearHabits(): void {
+  for (const h of [...registry.values()]) h.destroy()
+}
+
 /**
- * Create a framework-agnostic habit scheduler.
+ * Create a framework-agnostic habit scheduler. The returned controller is
+ * registered so it can be found via {@link listHabits} / {@link getHabit}, and
+ * removed with `controller.destroy()`.
  *
  * @example
  * const job = createHabit(() => console.log('tick'), { every: '2h ~ 5m' })
@@ -224,10 +289,10 @@ export function createHabit(
 ): HabitController {
   const opts = options ?? ({} as HabitOptions)
   const { immediate = false, autoStart = true, random = Math.random } = opts
+  const id = opts.id ?? `h${++seq}`
+  let name = opts.name
 
-  const list = 'habits' in opts && Array.isArray(opts.habits) ? opts.habits : [opts as Schedule]
-  const specs = list.map(normalize).filter((s): s is Spec => s != null)
-  const tasks: Task[] = specs.map(spec => ({ ...spec, anchor: 0, count: 0, nextTs: null, cancel: null }))
+  let tasks: Task[] = buildTasks(opts)
 
   let counter = 0
   let isActive = false
@@ -335,10 +400,34 @@ export function createHabit(
     }
   }
 
-  if (autoStart)
-    start(immediate)
+  const update = (next: HabitOptions) => {
+    const wasActive = isActive
+    if (isActive)
+      stop()
+    if (next?.name !== undefined)
+      name = next.name
+    tasks = buildTasks(next ?? ({} as HabitOptions))
+    if (wasActive) {
+      start(false)
+    }
+    else {
+      recomputeNext()
+      notify()
+    }
+    notifyRegistry()
+  }
 
-  return {
+  const destroy = () => {
+    stop()
+    registry.delete(id)
+    notifyRegistry()
+  }
+
+  const controller: HabitController = {
+    id,
+    get name() {
+      return name
+    },
     get counter() {
       return counter
     },
@@ -353,6 +442,16 @@ export function createHabit(
     pause,
     resume,
     reset,
+    update,
+    destroy,
     subscribe,
   }
+
+  registry.set(id, controller)
+  notifyRegistry()
+
+  if (autoStart)
+    start(immediate)
+
+  return controller
 }

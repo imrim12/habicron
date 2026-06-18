@@ -1,4 +1,4 @@
-import type { Schedule } from '../core'
+import type { HabitSummary, Schedule } from '../core'
 /**
  * habicron — React adapter.
  *
@@ -8,9 +8,9 @@ import type { Schedule } from '../core'
  * The hook is `useHabit`.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { createHabit } from '../core'
+import { createHabit, listHabits, subscribeHabits } from '../core'
 
-export type { Duration, Jitter, Period, Schedule } from '../core'
+export type { Duration, HabitSummary, Jitter, Period, Schedule } from '../core'
 
 export interface ReactControlFlags {
   /** Fire once immediately on start (counts toward `counter`). */
@@ -97,7 +97,7 @@ export function useHabit<const O extends UseHabitOptions>(
     sync()
     return () => {
       unsubscribe()
-      ctrl.stop()
+      ctrl.destroy()
       controlRef.current = null
     }
   }, [optionsKey])
@@ -117,4 +117,42 @@ export function useHabit<const O extends UseHabitOptions>(
     resume,
     reset,
   }
+}
+
+/**
+ * Reactively list every registered habit (from `createHabit` / `useHabit`).
+ * Re-renders as habits are added, removed, or change state — a ready-made
+ * management view.
+ *
+ * @example
+ * const habits = useHabits() // [{ id, name, isActive, counter, nextRun }, …]
+ */
+export function useHabits(): HabitSummary[] {
+  const [habits, setHabits] = useState<HabitSummary[]>([])
+
+  useEffect(() => {
+    let perHabit: Array<() => void> = []
+    const refresh = () => {
+      setHabits(listHabits().map(h => ({
+        id: h.id,
+        name: h.name,
+        isActive: h.isActive,
+        counter: h.counter,
+        nextRun: h.nextRun,
+      })))
+    }
+    const resubscribe = () => {
+      for (const u of perHabit) u()
+      perHabit = listHabits().map(h => h.subscribe(refresh))
+      refresh()
+    }
+    resubscribe()
+    const unsubscribeRegistry = subscribeHabits(resubscribe)
+    return () => {
+      unsubscribeRegistry()
+      for (const u of perHabit) u()
+    }
+  }, [])
+
+  return habits
 }

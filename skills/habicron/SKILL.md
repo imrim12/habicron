@@ -133,16 +133,25 @@ The callback fires on the **union** of all habits.
 
 ## CLI
 
-Run any shell command on a randomized schedule:
+The `habit` command runs any shell command on a randomized schedule — attached,
+or managed by a background daemon (pm2-style).
 
 ```sh
-habit --every "10s ~ 2s" -- echo "stretch"
-habit --times 3 --per hour --jitter 5m -- npm run sync
-habit --every 1h --immediate --max 5 -- ./backup.sh
+# attached: fires in this terminal until Ctrl-C
+habit run --every "10s ~ 2s" -- echo "stretch"
+
+# managed: a background daemon keeps it firing
+habit start --name sync --every "1h ~ 5m" -- npm run sync
+habit list           # id, name, status, schedule, the command it runs, runs, next/last
+habit logs sync      # recent output
+habit stop sync      # pause   ·  habit start sync = resume
+habit update sync --every 30m
+habit delete sync    # alias: rm   ·   habit kill = stop the daemon
 ```
 
-Flags: `--every <dur>`, `--times <n> --per <period>`, `--jitter <dur>`,
-`-i/--immediate`, `--max <n>`, `-h/--help`, `-v/--version`.
+Schedule flags: `--every <dur>`, `--times <n> --per <period>`, `--jitter <dur>`,
+`-i/--immediate`, `--name <n>`. Definitions persist in `~/.habit/`
+(`HABIT_HOME` to relocate).
 
 ## Gotchas
 

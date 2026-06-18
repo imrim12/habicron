@@ -124,22 +124,48 @@ The callback fires on the **union** of all habits.
 
 ## CLI
 
-Run any shell command on a randomized schedule:
+The `habit` command runs any shell command on a randomized schedule. It works
+two ways — attached, or managed by a background daemon (like pm2).
+
+**Attached** — fires in your terminal until you Ctrl-C:
 
 ```sh
-habit --every "10s ~ 2s" -- echo "stretch"
-habit --times 3 --per hour --jitter 5m -- npm run sync
-habit --every 1h --immediate --max 5 -- ./backup.sh
+habit run --every "10s ~ 2s" -- echo "stretch"
 ```
 
-| Flag | Meaning |
+**Managed** — a background daemon keeps habits firing, and you list / inspect /
+update / delete them like processes:
+
+```sh
+habit start --name sync --every "1h ~ 5m" -- npm run sync   # create + run in background
+habit start --times 3 --per day --jitter 2h -- ./backup.sh
+habit list                                                  # what's running, and what it runs
+habit logs sync                                             # recent output
+habit stop sync                                             # pause
+habit start sync                                            # resume
+habit restart sync
+habit update sync --every 30m                               # change schedule live
+habit delete sync                                           # remove (alias: rm)
+habit kill                                                  # stop the daemon
+```
+
+`habit list` shows each habit's id, name, status, schedule, **the command it
+runs**, fire count, and next/last run:
+
+```
+id  name  status   schedule    command       runs  next   last
+1   sync  running  every 1h~5m  npm run sync  4     in 52m  8m ago
+```
+
+Habit definitions persist in `~/.habit/` (override with `HABIT_HOME`).
+
+| Schedule flag | Meaning |
 | --- | --- |
 | `--every <dur>` | interval between fires |
 | `--times <n> --per <period>` | N times per minute…year |
 | `--jitter <dur>` | max random nudge per fire |
 | `-i, --immediate` | fire once immediately |
-| `--max <n>` | stop after N fires |
-| `-h, --help` / `-v, --version` | help / version |
+| `--name <n>` | label for `list` / `logs` / etc. |
 
 ## API
 
@@ -166,6 +192,30 @@ interface ControlFlags {
 ```
 
 The framework adapters wrap this: Vue maps it onto refs, React onto state.
+
+### Managing habits
+
+Every habit is registered, so you can list, look up, update, and remove them:
+
+```ts
+import { createHabit, getHabit, listHabits } from 'habicron'
+
+createHabit(syncFeed, { id: 'feed', name: 'Feed sync', every: '15m ~ 2m' })
+
+listHabits()            // [{ id, name, counter, nextRun, isActive, … }, …]
+const job = getHabit('feed')
+job?.update({ every: '5m' })   // reschedule in place (keeps id + counter)
+job?.destroy()                 // stop and unregister
+```
+
+In Vue and React, `useHabits()` returns that list **reactively** — a ready-made
+management view that updates as habits fire or come and go:
+
+```ts
+import { useHabits } from 'habicron/vue' // or 'habicron/react'
+
+const habits = useHabits() // Vue: Ref<HabitSummary[]> · React: HabitSummary[]
+```
 
 ## Scope
 

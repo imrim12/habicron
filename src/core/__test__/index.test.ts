@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createHabit, dur, longTimeout, normalize, resolveJitter } from '../index'
+import { clearHabits, createHabit, dur, getHabit, listHabits, longTimeout, normalize, resolveJitter, subscribeHabits } from '../index'
 
 describe('dur', () => {
   it('passes numbers through as milliseconds', () => {
@@ -191,5 +191,58 @@ describe('createHabit', () => {
     const before = listener.mock.calls.length
     await vi.advanceTimersByTimeAsync(10_000)
     expect(listener.mock.calls.length).toBe(before)
+  })
+})
+
+describe('registry', () => {
+  beforeEach(() => {
+    clearHabits()
+    vi.useFakeTimers()
+  })
+  afterEach(() => {
+    clearHabits()
+    vi.useRealTimers()
+  })
+
+  it('lists and looks up created habits', () => {
+    const a = createHabit(() => {}, { id: 'a', name: 'A', every: '10s', autoStart: false })
+    const b = createHabit(() => {}, { every: '20s', autoStart: false })
+    expect(listHabits()).toHaveLength(2)
+    expect(getHabit('a')).toBe(a)
+    expect(a.name).toBe('A')
+    expect(b.id).toMatch(/^h\d+$/)
+  })
+
+  it('destroy removes from the registry and stops timers', async () => {
+    const cb = vi.fn()
+    const h = createHabit(cb, { every: '10s' })
+    expect(getHabit(h.id)).toBe(h)
+    h.destroy()
+    expect(getHabit(h.id)).toBeUndefined()
+    await vi.advanceTimersByTimeAsync(30_000)
+    expect(cb).not.toHaveBeenCalled()
+  })
+
+  it('update replaces the schedule in place, keeping id and counter', async () => {
+    const cb = vi.fn()
+    const h = createHabit(cb, { id: 'x', every: '10s' })
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(h.counter).toBe(1)
+    h.update({ every: '5s' })
+    expect(h.id).toBe('x')
+    expect(h.counter).toBe(1)
+    await vi.advanceTimersByTimeAsync(5_000)
+    expect(h.counter).toBe(2)
+  })
+
+  it('notifies registry subscribers on add and remove', () => {
+    const listener = vi.fn()
+    const unsub = subscribeHabits(listener)
+    const h = createHabit(() => {}, { every: '10s', autoStart: false })
+    const added = listener.mock.calls.length
+    expect(added).toBeGreaterThan(0)
+    h.destroy()
+    expect(listener.mock.calls.length).toBeGreaterThan(added)
+    unsub()
   })
 })

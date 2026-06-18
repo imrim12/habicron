@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { isReadonly } from 'vue'
-import { useHabit } from '../index'
+import { effectScope, isReadonly } from 'vue'
+import { clearHabits, createHabit } from '../../core'
+import { useHabit, useHabits } from '../index'
 
 describe('useHabit (vue)', () => {
   beforeEach(() => vi.useFakeTimers())
@@ -51,5 +52,28 @@ describe('useHabit (vue)', () => {
     finally {
       globalThis.window = original
     }
+  })
+})
+
+describe('useHabits (vue)', () => {
+  beforeEach(() => clearHabits())
+  afterEach(() => clearHabits())
+
+  it('reactively lists registered habits', () => {
+    const scope = effectScope()
+    let habits!: ReturnType<typeof useHabits>
+    scope.run(() => {
+      habits = useHabits()
+    })
+    expect(habits.value).toHaveLength(0)
+
+    const h = createHabit(() => {}, { id: 'z', name: 'Z', every: '10s', autoStart: false })
+    expect(habits.value.map(x => x.id)).toContain('z')
+    expect(habits.value.find(x => x.id === 'z')?.name).toBe('Z')
+
+    h.destroy()
+    expect(habits.value.map(x => x.id)).not.toContain('z')
+
+    scope.stop()
   })
 })

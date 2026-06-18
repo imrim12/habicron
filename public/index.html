@@ -420,17 +420,20 @@
 
       <div class="card wide">
         <div class="card-head">
-          <span class="label">cli — run any command on a habit</span>
+          <span class="label">cli — manage habits like pm2</span>
           <button class="copy ex-copy">Copy</button>
         </div>
-<pre><span class="c"># stretch reminder, roughly every 10 minutes</span>
-<span class="p">$</span> habit --every <span class="s">"10m ~ 2m"</span> -- notify-send <span class="s">"Stretch break"</span>
+<pre><span class="c"># start commands in the background, jittered so you don't look like a bot</span>
+<span class="p">$</span> habit start --name stretch --every <span class="s">"10m ~ 2m"</span> -- notify-send <span class="s">"Stretch"</span>
+<span class="p">$</span> habit start --every 1h --jitter 12m -- node scrape.js
 
-<span class="c"># pull a repo a few times a day, nicely spread out</span>
-<span class="p">$</span> habit --times 3 --per day --jitter 2h -- git pull
+<span class="c"># list what's running — and what each one runs</span>
+<span class="p">$</span> habit list
+<span class="p">  </span>id  name     status   schedule    command           runs  next
+<span class="p">  </span>1   stretch  running  every 10m~2m notify-send …     4     in 8m
+<span class="p">  </span>2   scrape   running  every 1h~12m node scrape.js    1     in 47m
 
-<span class="c"># scrape a page hourly, jittered so you don't look like a bot</span>
-<span class="p">$</span> habit --every 1h --jitter 12m -- node scrape.js</pre>
+<span class="p">$</span> habit logs stretch   <span class="c"># stop · restart · update · delete · kill</span></pre>
       </div>
 
       <div class="card wide">

@@ -12,11 +12,15 @@
  * process.on('SIGINT', () => { job.stop(); process.exit(0) })
  */
 export {
+  clearHabits,
   createHabit,
   dur,
+  getHabit,
+  listHabits,
   longTimeout,
   normalize,
   resolveJitter,
+  subscribeHabits,
 } from '../core'
 
 export type {
@@ -24,6 +28,7 @@ export type {
   Duration,
   HabitController,
   HabitOptions,
+  HabitSummary,
   Jitter,
   Period,
   Schedule,

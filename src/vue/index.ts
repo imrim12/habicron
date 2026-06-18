@@ -4,11 +4,11 @@
  * Wraps the core engine in Vue refs via `useHabit`.
  */
 import type { Ref } from 'vue'
-import type { ControlFlags, Schedule } from '../core'
+import type { ControlFlags, HabitSummary, Schedule } from '../core'
 import { getCurrentScope, onScopeDispose, readonly, ref } from 'vue'
-import { createHabit } from '../core'
+import { createHabit, listHabits, subscribeHabits } from '../core'
 
-export type { Duration, Jitter, Period, Schedule } from '../core'
+export type { Duration, HabitSummary, Jitter, Period, Schedule } from '../core'
 
 export interface VueControlFlags {
   /** Fire once immediately on start (counts toward `counter`). */
@@ -86,7 +86,7 @@ export function useHabit<const O extends UseHabitOptions>(
   if (getCurrentScope()) {
     onScopeDispose(() => {
       unsubscribe()
-      ctrl.stop()
+      ctrl.destroy()
     })
   }
 
@@ -101,4 +101,44 @@ export function useHabit<const O extends UseHabitOptions>(
     resume: ctrl.resume,
     reset: ctrl.reset,
   }
+}
+
+/**
+ * Reactively list every registered habit (from `createHabit` / `useHabit`).
+ * The returned ref updates as habits are added, removed, or change state —
+ * a ready-made management view.
+ *
+ * @example
+ * const habits = useHabits()
+ * // habits.value -> [{ id, name, isActive, counter, nextRun }, …]
+ */
+export function useHabits(): Readonly<Ref<HabitSummary[]>> {
+  const habits = ref<HabitSummary[]>([])
+  let perHabit: Array<() => void> = []
+
+  const refresh = () => {
+    habits.value = listHabits().map(h => ({
+      id: h.id,
+      name: h.name,
+      isActive: h.isActive,
+      counter: h.counter,
+      nextRun: h.nextRun,
+    }))
+  }
+  const resubscribe = () => {
+    for (const u of perHabit) u()
+    perHabit = listHabits().map(h => h.subscribe(refresh))
+    refresh()
+  }
+  resubscribe()
+  const unsubscribeRegistry = subscribeHabits(resubscribe)
+
+  if (getCurrentScope()) {
+    onScopeDispose(() => {
+      unsubscribeRegistry()
+      for (const u of perHabit) u()
+    })
+  }
+
+  return readonly(habits) as Readonly<Ref<HabitSummary[]>>
 }

@@ -37,7 +37,7 @@ src/
   node/   index.ts + __test__/   # default entry: re-exports core, headless
   vue/    index.ts + __test__/   # Vue adapter — useHabit (refs)
   react/  index.ts + __test__/   # React adapter — useHabit (state)
-  cli/    index.ts + __test__/   # `habit` binary (runs a shell command)
+  cli/    index.ts store.ts daemon.ts + __test__/   # `habit` pm2-style manager
 skills/habicron/SKILL.md         # agent skill describing how to use habicron
 public/index.html                # self-contained landing page (no framework)
 build.config.ts                  # unbuild — emits ESM + CJS + .d.ts
@@ -105,6 +105,11 @@ small named function.
      without the engine knowing about any framework.
    - **`random`**: injectable RNG (`() => number`) threaded through jitter, for
      deterministic tests and a reproducible docs demo.
+   - **registry + `id`/`name`**: every habit is registered on creation. The
+     in-process management surface is `listHabits` / `getHabit` /
+     `subscribeHabits` / `clearHabits`, plus `controller.update(options)`
+     (reschedule in place, keep id + counter) and `controller.destroy()` (stop
+     and unregister). `HabitSummary` is the plain snapshot used by listing UIs.
 
 ### Adapters
 
@@ -117,9 +122,17 @@ small named function.
 - **`src/react`** — `useHabit`. Creates the controller inside `useEffect` (so
   it's SSR-safe), mirrors state into `useState`, and stops it on unmount.
   Returns **plain values**, not refs.
-- **`src/cli`** — `parseArgs` / `toOptions` / `main`. Parses flags, builds a
-  schedule, and spawns a shell command on each fire. `parseArgs` and `toOptions`
-  are exported pure functions so they can be unit-tested without spawning.
+- **`src/cli`** — the `habit` binary, a pm2-style manager. `index.ts` is the
+  subcommand client (`run` attached; `start`/`list`/`stop`/`restart`/`update`/
+  `delete`/`logs`/`kill` managed). `store.ts` is the durable store: definitions
+  in `~/.habit/habits.json` (CLI-owned) and runtime state in `state.json`
+  (daemon-owned) — split so the two never clobber each other's writes;
+  `HABIT_HOME` relocates it. `daemon.ts` is the detached `habit __daemon`
+  process that schedules `running` records with the core engine, runs their
+  commands (logging to `~/.habit/logs/<id>.log`), and **polls** the store,
+  re-creating a habit's controller when its `rev` bumps (update/restart). The
+  pure pieces (`parseArgs`/`toOptions`, the store CRUD, `formatList`,
+  `recordToOptions`) are unit-tested; the daemon is verified by hand.
 
 ---
 
@@ -130,7 +143,8 @@ unbuild generates the `.d.ts` per entry. When the public API changes, write the
 types first, then make the implementation conform.
 
 - **Core** (`src/core`) is the type source of truth: `Duration`, `Jitter`,
-  `Period`, `Schedule`, `ControlFlags`, `HabitOptions`, `HabitController`.
+  `Period`, `Schedule`, `ControlFlags`, `HabitOptions`, `HabitController`,
+  `HabitSummary`.
 - **`Schedule`** is a discriminated union with `never` guards so `every` and
   `times`/`per` are mutually exclusive at compile time. Preserve that.
 - **Adapters** define their own return types because their shapes differ:
@@ -282,11 +296,20 @@ The engine is timer-driven, so tests must control time and randomness.
 
 ---
 
-## 12. Out of scope
+## 12. Scope
 
-This is a **client/runtime scheduler**, not a durable backend job runner. It does
-not provide at-least-once delivery, persistence across reloads, or distributed
-coordination, and timers may be throttled by the browser when a tab is
-backgrounded. Requests for those belong in a separate service (e.g. Cloudflare
-Durable Object alarms / a queue), not in this package. Do not grow this library
-toward server scheduling.
+The **engine and adapters** (`core`/`node`/`vue`/`react`) are a **runtime
+scheduler**: in-process only, no persistence across reloads, no at-least-once
+delivery, no distributed coordination; browser timers may be throttled when a
+tab is backgrounded. Keep them that way — don't add persistence or a daemon to
+the core/adapters.
+
+The **`habit` CLI is the exception**: it is a pm2-style manager and *does*
+persist habit definitions to `~/.habit/` and run them via a background daemon.
+That durability lives entirely in `src/cli` (store + daemon) and must not leak
+into the engine. The CLI is still a single-host process manager — not a
+distributed scheduler, queue, or at-least-once system. For those, reach for a
+real service (e.g. Cloudflare Durable Object alarms / a queue). When the CLI
+needs the "next jittered fire time" without running (e.g. to feed an external
+scheduler), add a pure `nextRuns(n)` to the core rather than reaching into the
+daemon.
