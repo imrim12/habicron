@@ -1,0 +1,497 @@
+<!-- random-cronjob — landing page -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>random-cronjob — habits, not cronjobs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bg: #09090b;
+    --bg-panel: #0f0f11;
+    --bg-elev: #161619;
+    --border: #242428;
+    --border-soft: #1c1c20;
+    --text: #f4f4f5;
+    --dim: #a1a1aa;
+    --faint: #6b6b73;
+    --green: #5be37d;
+    --green-bright: #8af3a3;
+    --green-soft: rgba(91, 227, 125, 0.14);
+    --green-line: rgba(91, 227, 125, 0.4);
+    --kw: #c79bf0;
+    --fn: #7fb0ff;
+    --str: #5be37d;
+    --display: "Space Grotesk", system-ui, sans-serif;
+    --body: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --maxw: 1180px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- nav ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(9, 9, 11, 0.78);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .nav-inner {
+    display: flex; align-items: center; gap: 32px;
+    height: 64px; max-width: var(--maxw); margin: 0 auto; padding: 0 28px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-weight: 700; font-size: 15px; letter-spacing: -0.02em;
+  }
+  .pulse {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 0 var(--green-line);
+    animation: pulse 2.4s ease-out infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(91,227,125,0.5); }
+    70% { box-shadow: 0 0 0 7px rgba(91,227,125,0); }
+    100% { box-shadow: 0 0 0 0 rgba(91,227,125,0); }
+  }
+  .nav-links { display: flex; gap: 26px; font-size: 14px; color: var(--dim); }
+  .nav-links a:hover { color: var(--text); }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 18px; }
+  .ver {
+    font-family: var(--mono); font-size: 12px; color: var(--dim);
+    border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px;
+  }
+  .nav-right svg { width: 19px; height: 19px; color: var(--dim); }
+  .nav-right a:hover svg { color: var(--text); }
+
+  /* ---------- hero ---------- */
+  .hero { padding: 92px 0 64px; }
+  .hero-grid {
+    display: grid; grid-template-columns: 1fr 1.12fr; gap: 56px; align-items: center;
+  }
+  .eyebrow {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--faint); margin-bottom: 26px;
+  }
+  .eyebrow b { color: var(--green); font-weight: 500; }
+  h1 {
+    font-family: var(--display); font-weight: 600;
+    font-size: clamp(2.9rem, 6.4vw, 5rem); line-height: 0.96;
+    letter-spacing: -0.035em; margin-bottom: 26px;
+  }
+  h1 .dot { color: var(--green); }
+  .lede {
+    font-size: 1.12rem; color: var(--dim); max-width: 30em; margin-bottom: 18px;
+  }
+  .features {
+    font-family: var(--mono); font-size: 12.5px; color: var(--faint);
+    margin-bottom: 36px; line-height: 1.9;
+  }
+  .features b { color: var(--green); font-weight: 500; }
+  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--display); font-weight: 500; font-size: 15px;
+    padding: 13px 26px; border-radius: 10px; cursor: pointer; transition: 0.18s;
+    border: 1px solid var(--border); background: transparent; color: var(--text);
+  }
+  .btn-primary {
+    background: var(--green-soft); border-color: var(--green-line); color: var(--green-bright);
+    box-shadow: 0 0 0 1px rgba(91,227,125,0.18), 0 0 28px -6px rgba(91,227,125,0.55);
+  }
+  .btn-primary:hover {
+    background: rgba(91,227,125,0.22);
+    box-shadow: 0 0 0 1px rgba(91,227,125,0.4), 0 0 40px -4px rgba(91,227,125,0.7);
+  }
+  .btn-ghost:hover { border-color: var(--faint); background: var(--bg-elev); }
+
+  /* ---------- terminal ---------- */
+  .term-shell { position: relative; }
+  .term-shell::before {
+    content: ""; position: absolute; inset: -40px -30px -50px -10px; z-index: 0;
+    background:
+      radial-gradient(120% 80% at 80% 0%, rgba(91,227,125,0.22), transparent 60%),
+      radial-gradient(90% 90% at 100% 100%, rgba(91,227,125,0.12), transparent 55%);
+    filter: blur(6px);
+  }
+  .term {
+    position: relative; z-index: 1;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 30px 80px -30px rgba(0,0,0,0.9);
+  }
+  .term-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 13px 16px; border-bottom: 1px solid var(--border-soft);
+    background: rgba(255,255,255,0.015);
+  }
+  .term-bar .d { width: 11px; height: 11px; border-radius: 50%; background: #2c2c31; }
+  .term-bar .fname {
+    margin-left: 10px; font-family: var(--mono); font-size: 12.5px; color: var(--dim);
+  }
+  .term-bar .live {
+    margin-left: auto; display: flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 11.5px; color: var(--green);
+  }
+  .term-bar .live .pulse { width: 7px; height: 7px; }
+  pre.code {
+    font-family: var(--mono); font-size: 13px; line-height: 1.85;
+    padding: 22px 22px 18px; overflow-x: auto; color: var(--text); white-space: pre;
+  }
+  pre.code .c { color: var(--faint); font-style: italic; }
+  pre.code .k { color: var(--kw); }
+  pre.code .f { color: var(--fn); }
+  pre.code .s { color: var(--str); }
+  pre.code .p { color: var(--faint); }
+  .term-foot {
+    border-top: 1px solid var(--border-soft);
+    padding: 14px 22px; background: rgba(91,227,125,0.03);
+    font-family: var(--mono); font-size: 12.5px; color: var(--dim);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .term-foot .arrow { color: var(--green); }
+  .term-foot #count { color: var(--green-bright); }
+  .term-foot.fired { background: rgba(91,227,125,0.12); }
+  #cd { color: var(--text); font-variant-numeric: tabular-nums; }
+
+  /* ---------- sections ---------- */
+  section { padding: 64px 0; }
+  .sec-head { margin-bottom: 28px; }
+  .sec-head .eyebrow { margin-bottom: 12px; }
+  .sec-head h2 {
+    font-family: var(--display); font-weight: 600; font-size: 1.9rem;
+    letter-spacing: -0.02em;
+  }
+  .divider { border: none; border-top: 1px solid var(--border-soft); margin: 0; }
+
+  /* ---------- install ---------- */
+  .install { max-width: 720px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: -1px; }
+  .tab {
+    font-family: var(--mono); font-size: 13px; color: var(--dim);
+    background: none; border: 1px solid transparent; border-bottom: none;
+    padding: 9px 18px; border-radius: 9px 9px 0 0; cursor: pointer; transition: 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--green-bright); background: var(--bg-panel);
+    border-color: var(--border); border-bottom-color: var(--bg-panel);
+  }
+  .cmd {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 0 12px 12px 12px; padding: 16px 18px;
+  }
+  .cmd code {
+    font-family: var(--mono); font-size: 14px; color: var(--text); flex: 1;
+  }
+  .cmd code .prompt { color: var(--green); margin-right: 10px; user-select: none; }
+
+  .copy {
+    background: var(--bg-elev); border: 1px solid var(--border); color: var(--dim);
+    border-radius: 8px; padding: 6px 12px; font-size: 12px; font-family: var(--mono);
+    cursor: pointer; transition: 0.15s; white-space: nowrap;
+  }
+  .copy:hover { color: var(--text); border-color: var(--faint); }
+  .copy.done { color: var(--green-bright); border-color: var(--green-line); background: var(--green-soft); }
+
+  /* ---------- examples ---------- */
+  .ex-grid { display: grid; gap: 20px; grid-template-columns: 1fr 1fr; }
+  .ex-grid .card.wide { grid-column: 1 / -1; }
+  .card {
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--border-soft);
+  }
+  .card-head .label {
+    font-family: var(--mono); font-size: 12px; color: var(--dim); letter-spacing: 0.02em;
+  }
+  .card pre {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.8;
+    padding: 18px 18px; overflow-x: auto; white-space: pre; color: var(--text);
+  }
+  .card pre .c { color: var(--faint); font-style: italic; }
+  .card pre .k { color: var(--kw); }
+  .card pre .f { color: var(--fn); }
+  .card pre .s { color: var(--str); }
+  .card pre .t { color: var(--green-bright); }
+  .card pre .p { color: var(--faint); }
+
+  footer {
+    border-top: 1px solid var(--border-soft); padding: 40px 0;
+    font-family: var(--mono); font-size: 12.5px; color: var(--faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  footer b { color: var(--green); font-weight: 500; }
+
+  :focus-visible { outline: 2px solid var(--green); outline-offset: 3px; border-radius: 4px; }
+
+  @media (max-width: 860px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+    .nav-links { display: none; }
+    .ex-grid { grid-template-columns: 1fr; }
+    .hero { padding: 56px 0 40px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pulse { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+</style>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#"><span class="pulse"></span>random‑cronjob</a>
+    <div class="nav-links">
+      <a href="#install">Install</a>
+      <a href="#examples">Examples</a>
+      <a href="#">API</a>
+    </div>
+    <div class="nav-right">
+      <span class="ver">v0.1.0</span>
+      <a href="#" aria-label="GitHub">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">by <b>thecodeorigin</b></div>
+      <h1>Habits,<br />not cronjobs<span class="dot">.</span></h1>
+      <p class="lede">
+        A tiny Vue composable for randomized recurring tasks. Your jobs fire on a
+        human rhythm — close to schedule, never robotically on the dot.
+      </p>
+      <div class="features">
+        <b>~1 kB</b> · zero dependencies<br />
+        accurate by default, <b>jittered</b> on demand · SSR‑safe
+      </div>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#install">Get started</a>
+        <a class="btn btn-ghost" href="#">View on GitHub</a>
+      </div>
+    </div>
+
+    <div class="term-shell">
+      <div class="term">
+        <div class="term-bar">
+          <span class="d"></span><span class="d"></span><span class="d"></span>
+          <span class="fname">habits.ts</span>
+          <span class="live"><span class="pulse"></span>live</span>
+        </div>
+<pre class="code"><span class="k">import</span> { <span class="f">useRandomCronjob</span> } <span class="k">from</span> <span class="s">'random-cronjob'</span>
+
+<span class="c">// remind me to drink water every hour</span>
+<span class="f">useRandomCronjob</span>(drinkWater, { every<span class="p">:</span> <span class="s">'1h ± 8m'</span> })
+
+<span class="c">// check my cat every 2 hours</span>
+<span class="f">useRandomCronjob</span>(checkCat, { every<span class="p">:</span> <span class="s">'2h ± 20m'</span> })
+
+<span class="c">// a whole routine, with controls</span>
+<span class="k">const</span> { nextRun, pause } <span class="p">=</span> <span class="f">useRandomCronjob</span>(routine, {
+  controls<span class="p">:</span> <span class="k">true</span>,
+  habits<span class="p">:</span> [
+    { every<span class="p">:</span> <span class="s">'20s'</span>, jitter<span class="p">:</span> [<span class="s">'3s'</span>, <span class="s">'5s'</span>] },
+    { times<span class="p">:</span> 2, per<span class="p">:</span> <span class="s">'day'</span>, jitter<span class="p">:</span> <span class="s">'2h'</span> },
+  ],
+})</pre>
+        <div class="term-foot" id="foot">
+          <span class="arrow" id="arrow">▸</span>
+          <span id="msg">next fire in <span id="cd">00:20</span></span>
+          <span style="margin-left:auto">fired <span id="count">0</span>×</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<hr class="divider" />
+
+<section id="install">
+  <div class="wrap install">
+    <div class="sec-head">
+      <div class="eyebrow">Install</div>
+      <h2>Add it to your project</h2>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-cmd="npm i random-cronjob">npm</button>
+      <button class="tab" data-cmd="pnpm add random-cronjob">pnpm</button>
+      <button class="tab" data-cmd="bun add random-cronjob">bun</button>
+    </div>
+    <div class="cmd">
+      <code><span class="prompt">$</span><span id="cmd-text">npm i random-cronjob</span></code>
+      <button class="copy" id="cmd-copy">Copy</button>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<section id="examples">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Examples</div>
+      <h2>Three ways to use it</h2>
+    </div>
+    <div class="ex-grid">
+
+      <div class="card">
+        <div class="card-head">
+          <span class="label">one habit</span>
+          <button class="copy ex-copy">Copy</button>
+        </div>
+<pre><span class="k">import</span> { <span class="f">useRandomCronjob</span> } <span class="k">from</span> <span class="s">'random-cronjob'</span>
+
+<span class="c">// drink water, roughly hourly</span>
+<span class="f">useRandomCronjob</span>(() <span class="p">=></span> notify(<span class="s">'Drink water'</span>), {
+  every<span class="p">:</span> <span class="s">'1h ± 8m'</span>,
+})</pre>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="label">a daily routine</span>
+          <button class="copy ex-copy">Copy</button>
+        </div>
+<pre><span class="f">useRandomCronjob</span>(runAgent, {
+  controls<span class="p">:</span> <span class="k">true</span>,
+  habits<span class="p">:</span> [
+    { every<span class="p">:</span> <span class="s">'2h ± 20m'</span> },        <span class="c">// check the cat</span>
+    { times<span class="p">:</span> 2, per<span class="p">:</span> <span class="s">'day'</span>, jitter<span class="p">:</span> <span class="s">'90m'</span> },
+    { every<span class="p">:</span> <span class="s">'3d'</span>, jitter<span class="p">:</span> [<span class="s">'3h'</span>, <span class="s">'5h'</span>] },
+  ],
+})</pre>
+      </div>
+
+      <div class="card wide">
+        <div class="card-head">
+          <span class="label">read it in your template</span>
+          <button class="copy ex-copy">Copy</button>
+        </div>
+<pre><span class="p">&lt;</span><span class="t">script setup lang="ts"</span><span class="p">&gt;</span>
+<span class="k">const</span> { counter, nextRun, pause, resume } <span class="p">=</span> <span class="f">useRandomCronjob</span>(post, {
+  controls<span class="p">:</span> <span class="k">true</span>,
+  every<span class="p">:</span> <span class="s">'20s ± 4s'</span>,
+})
+<span class="p">&lt;/</span><span class="t">script</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="t">template</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="t">p</span><span class="p">&gt;</span>fired {{ counter }}× · next at {{ nextRun?.toLocaleTimeString() }}<span class="p">&lt;/</span><span class="t">p</span><span class="p">&gt;</span>
+  <span class="p">&lt;</span><span class="t">button</span> @click="pause"<span class="p">&gt;</span>Pause<span class="p">&lt;/</span><span class="t">button</span><span class="p">&gt;</span>
+<span class="p">&lt;/</span><span class="t">template</span><span class="p">&gt;</span></pre>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<footer class="wrap">
+  <span>random‑cronjob · MIT · built by <b>thecodeorigin</b></span>
+  <span>accurate by default · jittered on demand</span>
+</footer>
+
+<script>
+  // ---- install tabs ----
+  const tabs = document.querySelectorAll(".tab");
+  const cmdText = document.getElementById("cmd-text");
+  tabs.forEach((t) => {
+    t.addEventListener("click", () => {
+      tabs.forEach((x) => x.classList.remove("active"));
+      t.classList.add("active");
+      cmdText.textContent = t.dataset.cmd;
+    });
+  });
+
+  // ---- copy helpers ----
+  function flash(btn) {
+    const old = btn.textContent;
+    btn.textContent = "Copied";
+    btn.classList.add("done");
+    setTimeout(() => { btn.textContent = old; btn.classList.remove("done"); }, 1400);
+  }
+  function copy(text, btn) {
+    navigator.clipboard.writeText(text).then(() => flash(btn)).catch(() => {
+      const ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); flash(btn); } catch (e) {}
+      document.body.removeChild(ta);
+    });
+  }
+  document.getElementById("cmd-copy").addEventListener("click", function () {
+    copy(cmdText.textContent, this);
+  });
+  document.querySelectorAll(".ex-copy").forEach((btn) => {
+    btn.addEventListener("click", function () {
+      const pre = this.closest(".card").querySelector("pre");
+      copy(pre.innerText, this);
+    });
+  });
+
+  // ---- live "next fire" ticker: mirrors { every: '20s ± 4s' } ----
+  const cd = document.getElementById("cd");
+  const countEl = document.getElementById("count");
+  const foot = document.getElementById("foot");
+  const arrow = document.getElementById("arrow");
+  const msg = document.getElementById("msg");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  let count = 0;
+  const BASE = 20, JIT_MIN = 3, JIT_MAX = 5; // seconds
+  function nextDelay() {
+    const mag = JIT_MIN + Math.random() * (JIT_MAX - JIT_MIN);
+    return BASE + (Math.random() < 0.5 ? -1 : 1) * mag;
+  }
+  let remaining = nextDelay();
+
+  function fmt(s) {
+    s = Math.max(0, Math.ceil(s));
+    const m = String(Math.floor(s / 60)).padStart(2, "0");
+    const sec = String(s % 60).padStart(2, "0");
+    return m + ":" + sec;
+  }
+
+  function tick() {
+    remaining -= 1;
+    if (remaining <= 0) {
+      count++;
+      countEl.textContent = count;
+      msg.innerHTML = 'fired <span style="color:var(--green-bright)">drinkWater()</span> ✓';
+      if (!reduce) foot.classList.add("fired");
+      arrow.textContent = "✓";
+      setTimeout(() => {
+        foot.classList.remove("fired");
+        arrow.textContent = "▸";
+        remaining = nextDelay();
+        msg.innerHTML = 'next fire in <span id="cd">' + fmt(remaining) + "</span>";
+      }, 900);
+    } else {
+      const el = document.getElementById("cd");
+      if (el) el.textContent = fmt(remaining);
+    }
+  }
+  setInterval(tick, 1000);
+</script>
