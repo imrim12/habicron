@@ -8,46 +8,59 @@ does not convey.
 
 ## 1. What this is
 
-**habicron** is a single Vue composable, `useRandomCronjob`, that schedules a
-callback on **randomized recurring intervals** — "habits" rather than fixed
-cron. It is accurate (evenly spaced) by default and optionally jittered (each
-fire nudged earlier or later within bounds).
+**habicron** schedules a callback on **randomized recurring intervals** —
+"habits" rather than fixed cron. It is accurate (evenly spaced) by default and
+optionally jittered (each fire nudged earlier or later within bounds).
 
 - Package name: `habicron`
 - Repo: `imrim12/habicron`
-- Public export: `useRandomCronjob` (the package was rebranded to `habicron`;
-  the composable name was intentionally kept)
+- One framework-agnostic engine (`src/core`) with four published entry points:
+  **node** (default), **vue**, **react**, and a **cli** binary.
 
 The product thesis is the jitter-with-no-drift behavior. Anything that quietly
 turns this back into a plain `setInterval`/cron is a regression, even if tests
 pass.
 
-**Mental model:** a habit = `{ intervalMs, jitter }`. The library fires the
+**Mental model:** a habit = `{ intervalMs, jitter }`. The engine fires the
 callback on the union of all habits, each habit reschedules itself, and the next
 fire is always computed against a fixed grid so the long-run rate stays exact.
+Everything else (Vue refs, React state, CLI process) is a thin adapter over the
+core controller.
 
 ---
 
 ## 2. Repository layout
 
 ```
-src/index.js     # the composable — authored ESM, shipped as-is (no build)
-src/index.d.ts   # hand-written public types — THE API CONTRACT
-docs/index.html  # self-contained landing page (no framework, no bundler)
-package.json     # ESM, "files": ["src"], vue as the only peer dep
-tsconfig.json    # typecheck only (noEmit), no build output
+src/
+  core/   index.ts + __test__/   # the engine — types + scheduler, no deps
+  node/   index.ts + __test__/   # default entry: re-exports core, headless
+  vue/    index.ts + __test__/   # Vue adapter — useRandomCronjob (refs)
+  react/  index.ts + __test__/   # React adapter — useRandomCronjob (state)
+  cli/    index.ts + __test__/   # `habicron` binary (runs a shell command)
+public/index.html                # self-contained landing page (no framework)
+build.config.ts                  # unbuild — emits ESM + CJS + .d.ts
+vitest.config.ts                 # node env by default; jsdom via file docblock
+tsconfig.json                    # strict typecheck (noEmit)
+package.json                     # ESM, multi-entry exports map, bin
 ```
 
-There is intentionally **no build step**. The package publishes `src/`
-directly. `index.js` is hand-authored ESM; `index.d.ts` is hand-authored types.
-Do not introduce a bundler, transpiler, or `dist/` unless explicitly asked — a
-core value is "zero native deps, readable in one sitting."
+**There IS a build step now.** The package is authored in TypeScript and built
+with [unbuild](https://github.com/unjs/unbuild) to `dist/` (both `.mjs` and
+`.cjs`, with generated `.d.ts`). `package.json#files` ships only `dist`,
+`README.md`, `LICENSE`. `public/` is **not** published — it is the marketing
+page, deployed separately.
+
+> Historical note: habicron was once a single buildless `index.js`. It is now a
+> built, multi-platform package. Do not reintroduce a root `index.js` or remove
+> the build.
 
 ---
 
-## 3. Architecture: how `src/index.js` works
+## 3. Architecture: how `src/core/index.ts` works
 
-Read these pieces in order; each is a small named function.
+The engine lives entirely in `src/core`. Read these pieces in order; each is a
+small named function.
 
 1. **Time constants** — `S M H D W MO Y` (ms per unit). `MO`/`Y` are *averages*
    (30.436875 d / 365.25 d), not calendar-exact. `PERIOD` maps the `per` keys to
@@ -68,7 +81,7 @@ Read these pieces in order; each is a small named function.
    `MAX_DELAY` (2^31-1 ms ≈ 24.8 days). Returns a cancel function. Exists because
    a raw `setTimeout` with a larger delay **fires immediately** — the `month`,
    `year`, and long-interval habits depend on this.
-6. **`useRandomCronjob(callback, options)`** — the composable:
+6. **`createHabicron(callback, options)`** — the engine/controller:
    - Builds `specs` from `options.habits ?? [options]` → `normalize` → filter.
    - Each `task` carries `{ intervalMs, jitter, anchor, count, nextTs, cancel }`.
    - **`schedule(t)`**: `target = t.anchor + t.count * t.intervalMs + offset(t)`.
@@ -78,30 +91,51 @@ Read these pieces in order; each is a small named function.
      sign, **capped at `0.49 * intervalMs`** so adjacent fires can't reorder.
    - **`fire()`**: increments `counter`, calls the callback, swallows sync
      throws and async rejections so a bad run never kills the schedule.
-   - **`start(runImmediate)`** resets anchors/counts to now; `stop()` cancels all
-     timers; `pause/resume/reset` are built on those. `reset()` zeroes `counter`
-     and restarts from now.
-   - **SSR guard**: timers start only when `typeof window !== 'undefined'`.
-   - Returns `{ counter, nextRun }` always; adds
-     `{ isActive, pause, resume, reset }` only when `controls` is truthy.
+   - **`start/stop/pause/resume/reset`**: lifecycle. `reset()` zeroes `counter`
+     and restarts from now. `start()` no-ops if already active.
+   - **`autoStart`** (default `true`): the engine starts itself on creation.
+     Adapters pass `autoStart: false` to stay inert (SSR).
+   - **`subscribe(listener)`**: the engine notifies listeners on every state
+     change (`counter`/`nextRun`/`isActive`). This is how adapters stay reactive
+     without the engine knowing about any framework.
+   - **`random`**: injectable RNG (`() => number`) threaded through jitter, for
+     deterministic tests and a reproducible docs demo.
+
+### Adapters
+
+- **`src/node`** — re-exports the core surface (`createHabicron`, `dur`,
+  `normalize`, `resolveJitter`, `longTimeout`) plus a `habicron` alias. Headless;
+  the caller drives the controller.
+- **`src/vue`** — `useRandomCronjob` (+ `useHabicron` alias). Creates a
+  controller with `autoStart: typeof window !== 'undefined'`, mirrors its state
+  into `readonly` refs via `subscribe`, and disposes on scope teardown.
+- **`src/react`** — `useRandomCronjob` (+ `useHabicron` alias). Creates the
+  controller inside `useEffect` (so it's SSR-safe), mirrors state into
+  `useState`, and stops it on unmount. Returns **plain values**, not refs.
+- **`src/cli`** — `parseArgs` / `toOptions` / `main`. Parses flags, builds a
+  schedule, and spawns a shell command on each fire. `parseArgs` and `toOptions`
+  are exported pure functions so they can be unit-tested without spawning.
 
 ---
 
-## 4. Public API contract (`src/index.d.ts`)
+## 4. Public API contract
 
-`index.d.ts` is the contract. When the public API changes, **edit the `.d.ts`
-first**, then make `index.js` conform.
+Types now live **in the TypeScript source** (no separate hand-written `.d.ts`);
+unbuild generates the `.d.ts` per entry. When the public API changes, write the
+types first, then make the implementation conform.
 
-- One named export: `useRandomCronjob`. Keep the surface this small.
-- `Schedule` is a discriminated union with `never` guards so `every` and
+- **Core** (`src/core`) is the type source of truth: `Duration`, `Jitter`,
+  `Period`, `Schedule`, `ControlFlags`, `HabicronOptions`, `HabicronController`.
+- **`Schedule`** is a discriminated union with `never` guards so `every` and
   `times`/`per` are mutually exclusive at compile time. Preserve that.
-- The conditional return type — control members present only when
-  `controls: true` — depends on the **`const O` type parameter**. Without
-  `const`, TS widens `controls: true` to `boolean` and the members leak into
-  every call. Do not remove `const`.
-- `counter`, `nextRun`, `isActive` are **readonly refs** (`Readonly<Ref<…>>`).
-  They must survive destructuring and stay live; do not change them to plain
-  values or getters.
+- **Adapters** define their own return types because their shapes differ:
+  - Vue returns `Readonly<Ref<…>>`; React returns plain values.
+  - Both gate control members (`pause`/`resume`/`reset`/`isActive`) behind
+    `controls: true` using the **`const O` type parameter**. Without `const`, TS
+    widens `controls: true` to `boolean` and the members leak into every call.
+    Do not remove `const`.
+- Keep the export surface small. Each adapter exports `useRandomCronjob` and the
+  `useHabicron` alias; do not add more without reason.
 
 ---
 
@@ -109,25 +143,28 @@ first**, then make `index.js` conform.
 
 These are load-bearing. Each maps to a real failure if removed.
 
-- **Buildless + dependency-free.** Vue is the only peer dep. No runtime deps.
-  Keep `dur`, `resolveJitter`, `normalize`, `longTimeout` inline.
+- **One engine.** All scheduling logic lives in `src/core`. Adapters must not
+  reimplement `dur`/`normalize`/`longTimeout`/the grid math.
 - **No drift.** Keep grid anchoring (`anchor + count*interval`). Never collapse
   into `setTimeout(base ± jitter, …)` recursion — that reintroduces drift.
 - **Jitter cap at `0.49 * interval`.** Stops fires from reordering.
 - **Long delays chunk** via `longTimeout`. Never a bare `setTimeout` for the
   reschedule.
-- **SSR-safe.** No timers during server render.
+- **SSR-safe.** No timers during server render (Vue gates on `window`; React
+  creates the controller in an effect).
 - **Resilient callbacks.** `fire()` swallows throws/rejections by design.
+- **Optional peer deps.** `vue` and `react` are optional peers, externalised in
+  the build — never bundled. The core and node entries must import neither.
 - **Types lead the implementation**, not the reverse.
 
 ---
 
 ## 6. Conventions
 
-- Style: follow the existing file exactly — 2-space indent, no semicolons,
-  single quotes, `const`-first. Do not reformat unrelated code.
-- Implementation is JS + JSDoc; types live in the `.d.ts`. Do not migrate
-  `index.js` to TypeScript (that would force a build step).
+- Style: 2-space indent, no semicolons, single quotes, `const`-first. Match the
+  existing files. Do not reformat unrelated code.
+- Source is TypeScript (`strict`). Keep `dur`, `resolveJitter`, `normalize`,
+  `longTimeout` inline in `src/core` — no extra runtime dependencies.
 - Duration units: `ms s m h d w mo y`. If you extend the parser, keep the
   longest-token-first regex ordering and add a test for the new unit.
 - Keep `month`/`year` as average approximations. If exact calendar boundaries
@@ -135,85 +172,95 @@ These are load-bearing. Each maps to a real failure if removed.
   `normalize()` — do not scatter it through the engine.
 - Naming mirrors the domain: `habit`, `every`, `jitter`, `nextRun`, `counter`.
   Keep user-facing names in product terms, not implementation terms.
-- If the composable is ever renamed to match the package (e.g. a `useHabicron`
-  alias), add it as an *additional* export and keep `useRandomCronjob` for
-  backward compatibility — do not rename in place.
+- The composable name `useRandomCronjob` is kept for backward compatibility;
+  `useHabicron` is the preferred alias. Keep both — don't rename in place.
 
 ---
 
 ## 7. Commands
 
 ```sh
-pnpm install        # vue + tooling (dev only)
+pnpm install        # deps (vue/react/unbuild/vitest are dev/peer only)
 pnpm typecheck      # tsc --noEmit  — must pass before commit
 pnpm test           # vitest run
 pnpm test:watch     # vitest
+pnpm build          # unbuild → dist/ (ESM + CJS + .d.ts)
 ```
 
 `pnpm` is the package manager for this repo. Do not commit a different
-lockfile.
+lockfile. `esbuild` needs its postinstall build script — it's allowlisted in
+`package.json#pnpm.onlyBuiltDependencies`.
 
 ---
 
 ## 8. Testing strategy
 
+Tests live next to each entry in `__test__/index.test.ts` and run under Vitest.
 The engine is timer-driven, so tests must control time and randomness.
 
 - **Fake timers:** `vi.useFakeTimers()`, drive with `vi.advanceTimersByTimeAsync`.
-  Assert on `counter.value`, `nextRun.value`, and call order.
-- **Determinism:** prefer injecting an RNG (see Backlog) over globally stubbing
-  `Math.random`. Until that lands, stub `Math.random` to a fixed sequence.
+  Assert on `counter`, `nextRun`, `isActive`, and call order.
+- **Determinism:** inject `options.random` rather than globally stubbing
+  `Math.random` (the engine accepts a seeded RNG for exactly this).
+- **Environment:** Vitest defaults to the `node` environment. Vue/React suites
+  opt into jsdom with a file docblock: `// @vitest-environment jsdom`. React
+  uses `@testing-library/react` (`renderHook` + `act`).
+- **CLI:** test the pure `parseArgs`/`toOptions` exports — do not spawn processes
+  in unit tests.
 - **Cases worth covering:** accurate spacing (no jitter); bounded jitter never
-  exits `[min,max]` and never inside `min`; jitter cap holds at small intervals;
-  `immediate` fires once and counts; `pause`/`resume`/`reset` semantics; union
-  of multiple habits; `longTimeout` chunking for `> MAX_DELAY` delays; SSR path
-  (no `window`) starts nothing; `times`/`per` interval math; the `'2h ± 5m'`
-  packed form.
+  exits `[min,max]`; jitter cap holds at small intervals; `immediate` fires once
+  and counts; `pause`/`resume`/`reset` semantics; union of multiple habits;
+  `longTimeout` chunking for `> MAX_DELAY` delays; SSR path (no `window`) starts
+  nothing; `times`/`per` interval math; the `'2h ± 5m'` packed form.
 
 ---
 
 ## 9. Change recipes
 
 - **Add a duration unit:** add to `UNIT`, insert into the `TOKEN` alternation in
-  the correct longest-first position, add a parser test.
-- **Add an option:** update `index.d.ts` (extend `Schedule` or `ControlFlags`),
-  then read it in `useRandomCronjob`/`normalize`. If it's a per-habit field, it
-  belongs on `Schedule`; if it's lifecycle, on `ControlFlags`.
-- **Add a returned value:** add to `RandomCronjobBase` (always present) or
-  `RandomCronjobControls` (gated by `controls`), back it with a `ref`, return it
-  readonly.
-- **Touch scheduling math:** re-run the no-drift reasoning in §3.6 and add a
-  test asserting the k-th fire stays near `anchor + k*interval`.
+  the correct longest-first position, add a parser test in `src/core/__test__`.
+- **Add a scheduling option:** edit the types in `src/core` (extend `Schedule`
+  or `ControlFlags`), implement in `createHabicron`, then surface through the
+  adapters if user-facing.
+- **Add a returned value to an adapter:** add it to that adapter's return type
+  and back it from the controller via `subscribe`.
+- **Touch scheduling math:** re-run the no-drift reasoning in §3 and add a test
+  asserting the k-th fire stays near `anchor + k*interval`.
+- **Add a new platform entry:** add `src/<name>/index.ts`, register it in
+  `build.config.ts#entries` and `package.json#exports`, and add a test folder.
 
 ---
 
 ## 10. Release / publish
 
-- Buildless: `npm publish` ships `src/` per `package.json#files`.
+- Built package: `pnpm build` then `npm publish` ships `dist/` per
+  `package.json#files`. `prepublishOnly` runs the build automatically.
+- `publishConfig.access` is `public`.
 - Bump `version` (semver). Public API change → minor pre-1.0, breaking →
   document in the README and bump accordingly.
-- Before publishing: `pnpm typecheck && pnpm test`, confirm `files` includes
-  only `src`, and that `docs/` is **not** published (it isn't listed — keep it
-  that way).
-- `docs/index.html` is the marketing page, deployed separately (static host /
+- Before publishing: `pnpm typecheck && pnpm test && pnpm build`, confirm `files`
+  ships only `dist`/`README.md`/`LICENSE`, and that `public/` is **not** packed.
+- `public/index.html` is the marketing page, deployed separately (static host /
   Pages); it is not part of the package.
 
 ---
 
 ## 11. Backlog (not yet implemented)
 
-- **Seedable RNG:** accept `random?: () => number`; thread through `randBetween`
-  and `offset`. Unblocks deterministic tests and a reproducible docs demo.
 - **`nextRuns(n)`:** return the next `n` fire times without executing — powers a
-  live timeline in `docs/`.
-- **Shiki highlighting** in `docs/index.html` if code samples start changing
-  often (replaces the hand-spanned `<span>`s; matches the VitePress/Vitest look).
+  live timeline in `public/`.
+- **Seeded docs demo:** wire `options.random` into `public/index.html` for a
+  reproducible live ticker.
+- **CLI config file:** allow `habicron --config habits.json` for multi-habit
+  runs.
+- **Shiki highlighting** in `public/index.html` if code samples start changing
+  often (replaces the hand-spanned `<span>`s).
 
 ---
 
 ## 12. Out of scope
 
-This is a **client-side composable**, not a durable backend job runner. It does
+This is a **client/runtime scheduler**, not a durable backend job runner. It does
 not provide at-least-once delivery, persistence across reloads, or distributed
 coordination, and timers may be throttled by the browser when a tab is
 backgrounded. Requests for those belong in a separate service (e.g. Cloudflare
