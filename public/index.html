@@ -335,10 +335,10 @@
 <pre class="code"><span class="k">import</span> { <span class="f">useHabit</span> } <span class="k">from</span> <span class="s">'habicron/vue'</span>
 
 <span class="c">// remind me to drink water every hour</span>
-<span class="f">useHabit</span>(drinkWater, { every<span class="p">:</span> <span class="s">'1h ± 8m'</span> })
+<span class="f">useHabit</span>(drinkWater, { every<span class="p">:</span> <span class="s">'1h ~ 8m'</span> })
 
 <span class="c">// check my cat every 2 hours</span>
-<span class="f">useHabit</span>(checkCat, { every<span class="p">:</span> <span class="s">'2h ± 20m'</span> })
+<span class="f">useHabit</span>(checkCat, { every<span class="p">:</span> <span class="s">'2h ~ 20m'</span> })
 
 <span class="c">// a whole routine, with controls</span>
 <span class="k">const</span> { nextRun, pause } <span class="p">=</span> <span class="f">useHabit</span>(routine, {
@@ -397,7 +397,7 @@
 
 <span class="c">// poll a feed, roughly every 15 min</span>
 <span class="k">const</span> job <span class="p">=</span> <span class="f">createHabit</span>(syncFeed, {
-  every<span class="p">:</span> <span class="s">'15m ± 2m'</span>,
+  every<span class="p">:</span> <span class="s">'15m ~ 2m'</span>,
 })</pre>
       </div>
 
@@ -411,7 +411,7 @@
 <span class="f">useHabit</span>(runAgent, {
   controls<span class="p">:</span> <span class="k">true</span>,
   habits<span class="p">:</span> [
-    { every<span class="p">:</span> <span class="s">'2h ± 20m'</span> },        <span class="c">// check the cat</span>
+    { every<span class="p">:</span> <span class="s">'2h ~ 20m'</span> },        <span class="c">// check the cat</span>
     { times<span class="p">:</span> 2, per<span class="p">:</span> <span class="s">'day'</span>, jitter<span class="p">:</span> <span class="s">'90m'</span> },
     { every<span class="p">:</span> <span class="s">'3d'</span>, jitter<span class="p">:</span> [<span class="s">'3h'</span>, <span class="s">'5h'</span>] },
   ],
@@ -424,13 +424,13 @@
           <button class="copy ex-copy">Copy</button>
         </div>
 <pre><span class="c"># stretch reminder, roughly every 10 minutes</span>
-<span class="p">$</span> habicron --every <span class="s">"10m ± 2m"</span> -- notify-send <span class="s">"Stretch break"</span>
+<span class="p">$</span> habit --every <span class="s">"10m ~ 2m"</span> -- notify-send <span class="s">"Stretch break"</span>
 
 <span class="c"># pull a repo a few times a day, nicely spread out</span>
-<span class="p">$</span> habicron --times 3 --per day --jitter 2h -- git pull
+<span class="p">$</span> habit --times 3 --per day --jitter 2h -- git pull
 
 <span class="c"># scrape a page hourly, jittered so you don't look like a bot</span>
-<span class="p">$</span> habicron --every 1h --jitter 12m -- node scrape.js</pre>
+<span class="p">$</span> habit --every 1h --jitter 12m -- node scrape.js</pre>
       </div>
 
       <div class="card wide">
@@ -441,7 +441,7 @@
 <pre><span class="p">&lt;</span><span class="t">script setup lang="ts"</span><span class="p">&gt;</span>
 <span class="k">const</span> { counter, nextRun, pause, resume } <span class="p">=</span> <span class="f">useHabit</span>(post, {
   controls<span class="p">:</span> <span class="k">true</span>,
-  every<span class="p">:</span> <span class="s">'20s ± 4s'</span>,
+  every<span class="p">:</span> <span class="s">'20s ~ 4s'</span>,
 })
 <span class="p">&lt;/</span><span class="t">script</span><span class="p">&gt;</span>
 
@@ -471,7 +471,7 @@
         </div>
         <ul class="uc-list">
           <li>Review and improve your memory <b>every 2h</b></li>
-          <li>Re-read the project goals <b>every 30m ± 5m</b></li>
+          <li>Re-read the project goals <b>every 30m ~ 5m</b></li>
           <li>Summarize what changed in the repo <b>2× / day</b></li>
           <li>Touch base with the user <b>every 90m, jittered</b></li>
         </ul>
@@ -484,7 +484,7 @@
         <ul class="uc-list">
           <li>Scout a shopping site for sales <b>every 1h</b></li>
           <li>Pull the repo and rebuild <b>3× / day</b></li>
-          <li>Back up to object storage <b>every 6h ± 30m</b></li>
+          <li>Back up to object storage <b>every 6h ~ 30m</b></li>
           <li>Run the test suite while you focus <b>every 45m</b></li>
         </ul>
       </div>
@@ -495,9 +495,9 @@
         </div>
         <ul class="uc-list">
           <li>Check my cat from the camera <b>every 5m</b></li>
-          <li>Refresh the live dashboard <b>every 20s ± 4s</b></li>
+          <li>Refresh the live dashboard <b>every 20s ~ 4s</b></li>
           <li>Autosave the draft <b>roughly every 1m</b></li>
-          <li>Nudge "drink water" <b>every 1h ± 8m</b></li>
+          <li>Nudge "drink water" <b>every 1h ~ 8m</b></li>
         </ul>
       </div>
 
@@ -508,7 +508,7 @@
         <ul class="uc-list">
           <li>Poll a webhook source <b>every 90s, jittered</b></li>
           <li>Warm the cache <b>4× / day</b></li>
-          <li>Reconcile with the upstream API <b>every 15m ± 2m</b></li>
+          <li>Reconcile with the upstream API <b>every 15m ~ 2m</b></li>
           <li>Sweep stale sessions <b>every 1h</b></li>
         </ul>
       </div>
@@ -561,7 +561,7 @@
     });
   });
 
-  // ---- live "next fire" ticker: mirrors { every: '20s ± 4s' } ----
+  // ---- live "next fire" ticker: mirrors { every: '20s ~ 4s' } ----
   const cd = document.getElementById("cd");
   const countEl = document.getElementById("count");
   const foot = document.getElementById("foot");

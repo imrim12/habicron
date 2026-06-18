@@ -61,7 +61,7 @@ interface State {
  * @example
  * const { counter, nextRun, pause } = useHabit(act, {
  *   controls: true,
- *   every: '20s ± 4s',
+ *   every: '20s ~ 4s',
  * })
  */
 export function useHabit<const O extends UseHabitOptions>(

@@ -37,7 +37,7 @@ src/
   node/   index.ts + __test__/   # default entry: re-exports core, headless
   vue/    index.ts + __test__/   # Vue adapter — useHabit (refs)
   react/  index.ts + __test__/   # React adapter — useHabit (state)
-  cli/    index.ts + __test__/   # `habicron` binary (runs a shell command)
+  cli/    index.ts + __test__/   # `habit` binary (runs a shell command)
 skills/habicron/SKILL.md         # agent skill describing how to use habicron
 public/index.html                # self-contained landing page (no framework)
 build.config.ts                  # unbuild — emits ESM + CJS + .d.ts
@@ -78,9 +78,10 @@ small named function.
    `{ min, max }` magnitude range in ms, or `null`. A bare duration means
    `{ min: 0, max }`. Sign is applied later, not here.
 4. **`normalize(s)`** — reduces one schedule spec to `{ intervalMs, jitter }` or
-   `null`. Resolves `every` (including the packed `'2h ± 5m'` form, split on
-   `±`/`~`) or `times`/`per`. Returns `null` for non-positive/`NaN` intervals,
-   which are then filtered out.
+   `null`. Resolves `every` (including the packed `'2h ~ 5m'` form, split on the
+   `PACKED` regex — canonical `~`, plus `+/-`/`+-` and the legacy `±` glyph) or
+   `times`/`per`. Returns `null` for non-positive/`NaN` intervals, which are then
+   filtered out.
 5. **`longTimeout(fn, delay)`** — `setTimeout` that chunks delays past
    `MAX_DELAY` (2^31-1 ms ≈ 24.8 days). Returns a cancel function. Exists because
    a raw `setTimeout` with a larger delay **fires immediately** — the `month`,
@@ -229,7 +230,7 @@ The engine is timer-driven, so tests must control time and randomness.
   exits `[min,max]`; jitter cap holds at small intervals; `immediate` fires once
   and counts; `pause`/`resume`/`reset` semantics; union of multiple habits;
   `longTimeout` chunking for `> MAX_DELAY` delays; SSR path (no `window`) starts
-  nothing; `times`/`per` interval math; the `'2h ± 5m'` packed form.
+  nothing; `times`/`per` interval math; the `'2h ~ 5m'` packed form.
 
 ---
 
@@ -274,7 +275,7 @@ The engine is timer-driven, so tests must control time and randomness.
   live timeline in `public/`.
 - **Seeded docs demo:** wire `options.random` into `public/index.html` for a
   reproducible live ticker.
-- **CLI config file:** allow `habicron --config habits.json` for multi-habit
+- **CLI config file:** allow `habit --config habits.json` for multi-habit
   runs.
 - **Shiki highlighting** in `public/index.html` if code samples start changing
   often (replaces the hand-spanned `<span>`s).

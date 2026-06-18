@@ -38,11 +38,17 @@ describe('normalize', () => {
   it('resolves `every`', () => {
     expect(normalize({ every: '20s' })).toEqual({ intervalMs: 20_000, jitter: null })
   })
-  it('resolves the packed `2h ± 5m` form', () => {
-    expect(normalize({ every: '2h ± 5m' })).toEqual({
+  it('resolves the packed `2h ~ 5m` form', () => {
+    expect(normalize({ every: '2h ~ 5m' })).toEqual({
       intervalMs: 2 * 60 * 60 * 1000,
       jitter: { min: 0, max: 5 * 60 * 1000 },
     })
+  })
+  it('accepts typeable jitter separators (~, +/-, +-) and the ± glyph', () => {
+    const expected = { intervalMs: 2 * 60 * 60 * 1000, jitter: { min: 0, max: 5 * 60 * 1000 } }
+    expect(normalize({ every: '2h +/- 5m' })).toEqual(expected)
+    expect(normalize({ every: '2h +- 5m' })).toEqual(expected)
+    expect(normalize({ every: '2h ± 5m' })).toEqual(expected)
   })
   it('resolves `times`/`per`', () => {
     expect(normalize({ times: 2, per: 'day' })).toEqual({

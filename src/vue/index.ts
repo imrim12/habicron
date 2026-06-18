@@ -48,7 +48,7 @@ export type UseHabitReturn<O extends UseHabitOptions>
  * Add `jitter` to perturb each fire by a bounded random amount.
  *
  * @example
- * useHabit(act, { every: '2h ± 5m' })
+ * useHabit(act, { every: '2h ~ 5m' })
  *
  * @example
  * const { counter, nextRun, pause } = useHabit(act, {

@@ -37,6 +37,11 @@ const MAX_DELAY = 2_147_483_647
 const UNIT: Record<string, number> = { ms: 1, sec: S, min: M, mo: MO, hr: H, w: W, s: S, m: M, h: H, d: D, y: Y }
 const TOKEN = /(\d+(?:\.\d+)?)\s*(ms|sec|min|mo|hr|[smhdwy])/g
 
+// Separator for the packed `every` form, e.g. '2h ~ 5m' (cadence then max
+// jitter). Canonical form is the typeable '~'; '+/-' and '+-' are also accepted
+// (and the ± glyph still works) so the cadence/jitter split is forgiving.
+const PACKED = /~|\+\/?-|±/
+
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
@@ -61,7 +66,7 @@ export type Period = 'minute' | 'hour' | 'day' | 'week' | 'month' | 'year'
  * One recurring habit. Use `every` (interval between fires) or `times`/`per`
  * ("N times per period") — never both. Jitter lives inline.
  *
- * `every` also accepts a packed form: `'2h ± 5m'` (cadence ± max jitter).
+ * `every` also accepts a packed form: `'2h ~ 5m'` (cadence ~ max jitter).
  */
 export type Schedule
   = | { every: Duration, jitter?: Jitter, times?: never, per?: never }
@@ -156,8 +161,8 @@ export function normalize(s: Schedule): Spec | null {
   let intervalMs = 0
   let jitter = resolveJitter(s.jitter)
   if ('every' in s && s.every != null) {
-    if (typeof s.every === 'string' && /[±~]/.test(s.every)) {
-      const [cadence, j] = s.every.split(/[±~]/)
+    if (typeof s.every === 'string' && PACKED.test(s.every)) {
+      const [cadence, j] = s.every.split(PACKED)
       intervalMs = dur(cadence.trim())
       if (!jitter)
         jitter = resolveJitter(j.trim())
@@ -210,7 +215,7 @@ interface Task extends Spec {
  * Create a framework-agnostic habit scheduler.
  *
  * @example
- * const job = createHabit(() => console.log('tick'), { every: '2h ± 5m' })
+ * const job = createHabit(() => console.log('tick'), { every: '2h ~ 5m' })
  * job.pause()
  */
 export function createHabit(

@@ -8,7 +8,7 @@
  * @example
  * import { createHabit } from 'habicron'
  *
- * const job = createHabit(() => fetchFeed(), { every: '15m ± 2m' })
+ * const job = createHabit(() => fetchFeed(), { every: '15m ~ 2m' })
  * process.on('SIGINT', () => { job.stop(); process.exit(0) })
  */
 export {

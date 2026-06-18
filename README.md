@@ -14,7 +14,7 @@ One tiny engine, four entry points:
 | `habicron` / `habicron/node` | Node, workers, scripts | a plain controller |
 | `habicron/vue` | Vue 3 | reactive `ref`s |
 | `habicron/react` | React 17+ | reactive state |
-| `habicron` (CLI) | the terminal | runs a shell command |
+| `habit` (CLI) | the terminal | runs a shell command |
 
 - **No drift** — fires are anchored to a fixed grid; jitter perturbs *around* the
   grid point and never accumulates.
@@ -39,20 +39,21 @@ A **habit** is either an interval or a rate:
 ```ts
 { every: '2h' }                       // every 2 hours
 { every: '1h30m' }                    // compound durations
-{ every: '2h ± 5m' }                  // packed cadence ± max jitter
+{ every: '2h ~ 5m' }                  // packed cadence ~ max jitter
 { every: '20s', jitter: ['3s','5s'] } // bounded jitter, [min, max]
 { times: 2, per: 'day', jitter: '2h' }// N times per minute|hour|day|week|month|year
 ```
 
 Durations are numbers (ms) or strings of `<num><unit>` tokens —
-units: `ms s m h d w mo y`. Jitter sign is always random.
+units: `ms s m h d w mo y`. Jitter sign is always random. In the packed form,
+`~` separates cadence from max jitter (`+/-` works too — both are typeable).
 
 ## Node
 
 ```ts
 import { createHabit } from 'habicron'
 
-const job = createHabit(() => syncFeed(), { every: '15m ± 2m' })
+const job = createHabit(() => syncFeed(), { every: '15m ~ 2m' })
 
 job.counter // times fired
 job.nextRun // Date of the next fire, or null
@@ -71,7 +72,7 @@ import { useHabit } from 'habicron/vue'
 
 const { counter, nextRun, pause, resume } = useHabit(post, {
   controls: true,
-  every: '20s ± 4s',
+  every: '20s ~ 4s',
 })
 </script>
 
@@ -92,7 +93,7 @@ import { useHabit } from 'habicron/react'
 function Reminder() {
   const { counter, nextRun, pause } = useHabit(
     () => notify('Drink water'),
-    { controls: true, every: '1h ± 8m' },
+    { controls: true, every: '1h ~ 8m' },
   )
   return (
     <p>
@@ -112,7 +113,7 @@ effect, so it is SSR-safe; the callback is always read fresh.
 useHabit(runAgent, {
   controls: true,
   habits: [
-    { every: '2h ± 20m' }, // check the cat
+    { every: '2h ~ 20m' }, // check the cat
     { times: 2, per: 'day', jitter: '90m' }, // twice a day
     { every: '3d', jitter: ['3h', '5h'] }, // every few days
   ],
@@ -126,9 +127,9 @@ The callback fires on the **union** of all habits.
 Run any shell command on a randomized schedule:
 
 ```sh
-habicron --every "10s ± 2s" -- echo "stretch"
-habicron --times 3 --per hour --jitter 5m -- npm run sync
-habicron --every 1h --immediate --max 5 -- ./backup.sh
+habit --every "10s ~ 2s" -- echo "stretch"
+habit --times 3 --per hour --jitter 5m -- npm run sync
+habit --every 1h --immediate --max 5 -- ./backup.sh
 ```
 
 | Flag | Meaning |

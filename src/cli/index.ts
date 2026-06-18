@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 import type { HabitOptions, Period, Schedule } from '../core'
 /**
- * habicron — CLI.
+ * habit — the habicron CLI.
  *
  * Run a shell command on a randomized recurring schedule.
  *
  * @example
- *   habicron --every "10s ± 2s" -- echo "stretch"
- *   habicron --times 3 --per hour --jitter 5m -- npm run sync
- *   habicron --every 1h --immediate --max 5 -- ./backup.sh
+ *   habit --every "10s ~ 2s" -- echo "stretch"
+ *   habit --times 3 --per hour --jitter 5m -- npm run sync
+ *   habit --every 1h --immediate --max 5 -- ./backup.sh
  */
 import { spawn } from 'node:child_process'
 import process from 'node:process'
@@ -114,13 +114,13 @@ export function toOptions(args: CliArgs): { options?: HabitOptions, error?: stri
   return { options: { ...schedule, immediate: args.immediate, autoStart: false } }
 }
 
-export const HELP = `habicron v${VERSION} — run a command on a randomized recurring schedule
+export const HELP = `habit v${VERSION} — run a command on a randomized recurring schedule
 
 Usage:
-  habicron [options] -- <command...>
+  habit [options] -- <command...>
 
 Schedule (one required):
-  --every <dur>        interval between fires, e.g. "2h", "10s ± 2s", "1h30m"
+  --every <dur>        interval between fires, e.g. "2h", "10s ~ 2s", "1h30m"
   --times <n>          N times ...
   --per <period>       ... per minute|hour|day|week|month|year
 
@@ -132,8 +132,8 @@ Options:
   -v, --version        print version
 
 Examples:
-  habicron --every "10s ± 2s" -- echo "stretch"
-  habicron --times 3 --per hour --jitter 5m -- npm run sync
+  habit --every "10s ~ 2s" -- echo "stretch"
+  habit --times 3 --per hour --jitter 5m -- npm run sync
 `
 
 /** Run a shell command, inheriting stdio. Resolves when it exits. */
@@ -142,7 +142,7 @@ async function runCommand(command: string[]): Promise<void> {
     const [cmd, ...rest] = command
     const child = spawn(cmd, rest, { stdio: 'inherit', shell: false })
     child.on('error', (err) => {
-      process.stderr.write(`[habicron] command failed: ${err.message}\n`)
+      process.stderr.write(`[habit] command failed: ${err.message}\n`)
       resolve()
     })
     child.on('close', () => resolve())
@@ -153,7 +153,7 @@ async function runCommand(command: string[]): Promise<void> {
 export async function main(argv: string[]): Promise<number> {
   const { args, error } = parseArgs(argv)
   if (error != null) {
-    process.stderr.write(`[habicron] ${error}\n\n${HELP}`)
+    process.stderr.write(`[habit] ${error}\n\n${HELP}`)
     return 1
   }
   if (!args || args.help) {
@@ -165,37 +165,37 @@ export async function main(argv: string[]): Promise<number> {
     return 0
   }
   if (args.command.length === 0) {
-    process.stderr.write(`[habicron] no command given. Pass one after "--".\n\n${HELP}`)
+    process.stderr.write(`[habit] no command given. Pass one after "--".\n\n${HELP}`)
     return 1
   }
 
   const { options, error: optError } = toOptions(args)
   if (optError != null || options == null) {
-    process.stderr.write(`[habicron] ${optError}\n\n${HELP}`)
+    process.stderr.write(`[habit] ${optError}\n\n${HELP}`)
     return 1
   }
 
   await new Promise<void>((resolve) => {
     const job = createHabit(async () => {
       const at = new Date().toLocaleTimeString()
-      process.stdout.write(`[habicron] ${at} → ${args.command.join(' ')}\n`)
+      process.stdout.write(`[habit] ${at} → ${args.command.join(' ')}\n`)
       await runCommand(args.command)
       if (args.max != null && job.counter >= args.max) {
         job.stop()
         resolve()
       }
       else if (job.nextRun) {
-        process.stdout.write(`[habicron] next at ${job.nextRun.toLocaleTimeString()}\n`)
+        process.stdout.write(`[habit] next at ${job.nextRun.toLocaleTimeString()}\n`)
       }
     }, options)
 
     job.start(args.immediate)
     if (job.nextRun)
-      process.stdout.write(`[habicron] first run at ${job.nextRun.toLocaleTimeString()}\n`)
+      process.stdout.write(`[habit] first run at ${job.nextRun.toLocaleTimeString()}\n`)
 
     const shutdown = () => {
       job.stop()
-      process.stdout.write('\n[habicron] stopped\n')
+      process.stdout.write('\n[habit] stopped\n')
       resolve()
     }
     process.on('SIGINT', shutdown)
@@ -207,7 +207,7 @@ export async function main(argv: string[]): Promise<number> {
 
 // Run only when invoked directly (not when imported by tests).
 const invokedDirectly
-  = typeof process !== 'undefined' && process.argv[1] != null && /habicron|cli[\\/]index/.test(process.argv[1])
+  = typeof process !== 'undefined' && process.argv[1] != null && /habit|cli[\\/]index/.test(process.argv[1])
 
 if (invokedDirectly) {
   void main(process.argv.slice(2)).then((code) => {

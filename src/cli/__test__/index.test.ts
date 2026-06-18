@@ -3,8 +3,8 @@ import { parseArgs, toOptions } from '../index'
 
 describe('parseArgs', () => {
   it('parses --every and a command after --', () => {
-    const { args } = parseArgs(['--every', '10s ± 2s', '--', 'echo', 'hi'])
-    expect(args?.every).toBe('10s ± 2s')
+    const { args } = parseArgs(['--every', '10s ~ 2s', '--', 'echo', 'hi'])
+    expect(args?.every).toBe('10s ~ 2s')
     expect(args?.command).toEqual(['echo', 'hi'])
   })
 
