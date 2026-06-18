@@ -1,7 +1,7 @@
-<!-- random-cronjob — landing page -->
+<!-- habicron — landing page -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>random-cronjob — habits, not cronjobs</title>
+<title>habicron — habits, not cronjobs</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet" />
@@ -260,7 +260,7 @@
 
 <nav class="nav">
   <div class="nav-inner">
-    <a class="brand" href="#"><span class="pulse"></span>random‑cronjob</a>
+    <a class="brand" href="#"><span class="pulse"></span>habicron</a>
     <div class="nav-links">
       <a href="#install">Install</a>
       <a href="#examples">Examples</a>
@@ -301,7 +301,7 @@
           <span class="fname">habits.ts</span>
           <span class="live"><span class="pulse"></span>live</span>
         </div>
-<pre class="code"><span class="k">import</span> { <span class="f">useRandomCronjob</span> } <span class="k">from</span> <span class="s">'random-cronjob'</span>
+<pre class="code"><span class="k">import</span> { <span class="f">useRandomCronjob</span> } <span class="k">from</span> <span class="s">'habicron/vue'</span>
 
 <span class="c">// remind me to drink water every hour</span>
 <span class="f">useRandomCronjob</span>(drinkWater, { every<span class="p">:</span> <span class="s">'1h ± 8m'</span> })
@@ -336,12 +336,12 @@
       <h2>Add it to your project</h2>
     </div>
     <div class="tabs" role="tablist">
-      <button class="tab active" data-cmd="npm i random-cronjob">npm</button>
-      <button class="tab" data-cmd="pnpm add random-cronjob">pnpm</button>
-      <button class="tab" data-cmd="bun add random-cronjob">bun</button>
+      <button class="tab active" data-cmd="npm i habicron">npm</button>
+      <button class="tab" data-cmd="pnpm add habicron">pnpm</button>
+      <button class="tab" data-cmd="bun add habicron">bun</button>
     </div>
     <div class="cmd">
-      <code><span class="prompt">$</span><span id="cmd-text">npm i random-cronjob</span></code>
+      <code><span class="prompt">$</span><span id="cmd-text">npm i habicron</span></code>
       <button class="copy" id="cmd-copy">Copy</button>
     </div>
   </div>
@@ -362,7 +362,7 @@
           <span class="label">one habit</span>
           <button class="copy ex-copy">Copy</button>
         </div>
-<pre><span class="k">import</span> { <span class="f">useRandomCronjob</span> } <span class="k">from</span> <span class="s">'random-cronjob'</span>
+<pre><span class="k">import</span> { <span class="f">useRandomCronjob</span> } <span class="k">from</span> <span class="s">'habicron/vue'</span>
 
 <span class="c">// drink water, roughly hourly</span>
 <span class="f">useRandomCronjob</span>(() <span class="p">=></span> notify(<span class="s">'Drink water'</span>), {
@@ -410,7 +410,7 @@
 <hr class="divider" />
 
 <footer class="wrap">
-  <span>random‑cronjob · MIT · built by <b>thecodeorigin</b></span>
+  <span>habicron · MIT · built by <b>thecodeorigin</b></span>
   <span>accurate by default · jittered on demand</span>
 </footer>
 

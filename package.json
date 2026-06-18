@@ -1,0 +1,119 @@
+{
+  "name": "habicron",
+  "version": "0.2.0",
+  "description": "Schedule callbacks on randomized recurring intervals — habits, not cronjobs. Accurate by default, jittered on demand, with no drift. Works in Node, Vue, React, and the CLI.",
+  "type": "module",
+  "license": "MIT",
+  "author": "thecodeorigin <nguyenhuunguyeny.ny@gmail.com>",
+  "homepage": "https://github.com/imrim12/habicron#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imrim12/habicron.git"
+  },
+  "bugs": {
+    "url": "https://github.com/imrim12/habicron/issues"
+  },
+  "keywords": [
+    "cron",
+    "cronjob",
+    "scheduler",
+    "schedule",
+    "interval",
+    "setInterval",
+    "jitter",
+    "random",
+    "habit",
+    "recurring",
+    "timer",
+    "vue",
+    "react",
+    "composable",
+    "hook",
+    "cli"
+  ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/node/index.d.ts",
+      "import": "./dist/node/index.mjs",
+      "require": "./dist/node/index.cjs"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.mjs",
+      "require": "./dist/core/index.cjs"
+    },
+    "./node": {
+      "types": "./dist/node/index.d.ts",
+      "import": "./dist/node/index.mjs",
+      "require": "./dist/node/index.cjs"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "import": "./dist/vue/index.mjs",
+      "require": "./dist/vue/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.mjs",
+      "require": "./dist/react/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/node/index.cjs",
+  "module": "./dist/node/index.mjs",
+  "types": "./dist/node/index.d.ts",
+  "bin": {
+    "habicron": "./dist/cli/index.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "unbuild",
+    "prepublishOnly": "pnpm run build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "react": ">=17",
+    "vue": ">=3"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@vitest/coverage-v8": "^2.1.8",
+    "jsdom": "^25.0.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "typescript": "^5.7.2",
+    "unbuild": "^2.0.0",
+    "vitest": "^2.1.8",
+    "vue": "^3.5.13"
+  },
+  "packageManager": "pnpm@10.0.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}
