@@ -11,6 +11,7 @@ export default defineBuildConfig({
   entries: [
     'src/core/index',
     'src/node/index',
+    'src/browser/index',
     'src/vue/index',
     'src/react/index',
     'src/cli/index',

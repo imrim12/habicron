@@ -14,8 +14,8 @@ optionally jittered (each fire nudged earlier or later within bounds).
 
 - Package name: `habicron`
 - Repo: `imrim12/habicron`
-- One framework-agnostic engine (`src/core`) with four published entry points:
-  **node** (default), **vue**, **react**, and a **cli** binary.
+- One framework-agnostic engine (`src/core`) with five published entry points:
+  **node** (default), **browser**, **vue**, **react**, and a **cli** binary.
 
 The product thesis is the jitter-with-no-drift behavior. Anything that quietly
 turns this back into a plain `setInterval`/cron is a regression, even if tests
@@ -24,8 +24,8 @@ pass.
 **Mental model:** a habit = `{ intervalMs, jitter }`. The engine fires the
 callback on the union of all habits, each habit reschedules itself, and the next
 fire is always computed against a fixed grid so the long-run rate stays exact.
-Everything else (Vue refs, React state, CLI process) is a thin adapter over the
-core controller.
+Everything else (Vue refs, React state, browser callbacks, CLI process) is a
+thin adapter over the core controller.
 
 ---
 
@@ -33,12 +33,13 @@ core controller.
 
 ```
 src/
-  core/   index.ts + __test__/   # the engine — types + scheduler, no deps
-  node/   index.ts + __test__/   # default entry: re-exports core, headless
-  vue/    index.ts + __test__/   # Vue adapter — useHabit (refs)
-  react/  index.ts + __test__/   # React adapter — useHabit (state)
-  cli/    index.ts store.ts daemon.ts + __test__/   # `habit` pm2-style manager
-skills/habicron/SKILL.md         # agent skill describing how to use habicron
+  core/    index.ts + __test__/   # the engine — types + scheduler, no deps
+  node/    index.ts + __test__/   # default entry: re-exports core, headless
+  browser/ index.ts + __test__/   # browser adapter — useHabit (callbacks)
+  vue/     index.ts + __test__/   # Vue adapter — useHabit (refs)
+  react/   index.ts + __test__/   # React adapter — useHabit (state)
+  cli/     index.ts store.ts daemon.ts + __test__/   # `habit` background task manager
+skills/{node,browser,vue,react,cli}/SKILL.md   # one agent skill per platform
 public/index.html                # self-contained landing page (no framework)
 build.config.ts                  # unbuild — emits ESM + CJS + .d.ts
 vitest.config.ts                 # node env by default; jsdom via file docblock
@@ -116,13 +117,16 @@ small named function.
 - **`src/node`** — re-exports the core surface (`createHabit`, `dur`,
   `normalize`, `resolveJitter`, `longTimeout`). Headless; the caller drives the
   controller.
+- **`src/browser`** — `useHabit` for vanilla browser apps. No refs/state, so
+  reactivity is delivered via callbacks (`onActive`, `onFire`, `onChange`);
+  wires them through `subscribe` and gates `autoStart` on `window` (SSR-safe).
 - **`src/vue`** — `useHabit`. Creates a controller with
   `autoStart: typeof window !== 'undefined'`, mirrors its state into `readonly`
   refs via `subscribe`, and disposes on scope teardown.
 - **`src/react`** — `useHabit`. Creates the controller inside `useEffect` (so
   it's SSR-safe), mirrors state into `useState`, and stops it on unmount.
   Returns **plain values**, not refs.
-- **`src/cli`** — the `habit` binary, a pm2-style manager. `index.ts` is the
+- **`src/cli`** — the `habit` binary, a background task manager. `index.ts` is the
   subcommand client (`run` attached; `start`/`list`/`stop`/`restart`/`update`/
   `delete`/`logs`/`kill` managed). `store.ts` is the durable store: definitions
   in `~/.habit/habits.json` (CLI-owned) and runtime state in `state.json`
@@ -304,7 +308,7 @@ delivery, no distributed coordination; browser timers may be throttled when a
 tab is backgrounded. Keep them that way — don't add persistence or a daemon to
 the core/adapters.
 
-The **`habit` CLI is the exception**: it is a pm2-style manager and *does*
+The **`habit` CLI is the exception**: it is a background task manager and *does*
 persist habit definitions to `~/.habit/` and run them via a background daemon.
 That durability lives entirely in `src/cli` (store + daemon) and must not leak
 into the engine. The CLI is still a single-host process manager — not a

@@ -7,11 +7,12 @@ by default (evenly spaced, anchored to the start time, **no drift**) and
 optionally **jittered** — each fire nudged earlier or later within bounds, so
 your jobs run on a human rhythm instead of robotically on the dot.
 
-One tiny engine, four entry points:
+One tiny engine, five entry points:
 
 | Import | For | Returns |
 | --- | --- | --- |
 | `habicron` / `habicron/node` | Node, workers, scripts | a plain controller |
+| `habicron/browser` | Vanilla browser (no framework) | controller + callbacks |
 | `habicron/vue` | Vue 3 | reactive `ref`s |
 | `habicron/react` | React 17+ | reactive state |
 | `habit` (CLI) | the terminal | runs a shell command |
@@ -63,6 +64,26 @@ job.stop()
 
 process.on('SIGINT', () => { job.stop(); process.exit(0) })
 ```
+
+## Browser (no framework)
+
+Vanilla JS has no refs or state, so reactivity comes through callbacks —
+`onActive`, `onFire`, `onChange`:
+
+```ts
+import { useHabit } from 'habicron/browser'
+
+const job = useHabit(() => refreshWidget(), {
+  every: '20s ~ 4s',
+  onFire: count => (badge.textContent = String(count)),
+  onActive: active => dot.classList.toggle('live', active),
+})
+
+job.pause() // or resume / update / destroy
+```
+
+`onActive` is the framework-free stand-in for a reactive `isActive`. SSR-safe:
+timers don't start unless a `window` is present.
 
 ## Vue
 
@@ -125,7 +146,7 @@ The callback fires on the **union** of all habits.
 ## CLI
 
 The `habit` command runs any shell command on a randomized schedule. It works
-two ways — attached, or managed by a background daemon (like pm2).
+two ways — attached, or managed by a lightweight background daemon.
 
 **Attached** — fires in your terminal until you Ctrl-C:
 

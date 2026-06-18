@@ -292,8 +292,8 @@
     <a class="brand" href="#"><span class="pulse"></span>habicron</a>
     <div class="nav-links">
       <a href="#install">Install</a>
-      <a href="#examples">Examples</a>
       <a href="#use-cases">Use cases</a>
+      <a href="#examples">Examples</a>
       <a href="https://github.com/imrim12/habicron#readme">API</a>
     </div>
     <div class="nav-right">
@@ -316,7 +316,7 @@
         schedule, never robotically on the dot.
       </p>
       <div class="features">
-        <b>Node</b> · <b>Vue</b> · <b>React</b> · <b>CLI</b> · tiny, zero‑dependency core<br />
+        <b>Node</b> · <b>Browser</b> · <b>Vue</b> · <b>React</b> · <b>CLI</b> · tiny, zero‑dependency core<br />
         accurate by default, <b>jittered</b> on demand · no drift · SSR‑safe
       </div>
       <div class="cta-row">
@@ -380,86 +380,6 @@
 
 <hr class="divider" />
 
-<section id="examples">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="eyebrow">Examples</div>
-      <h2>Four ways to use it</h2>
-    </div>
-    <div class="ex-grid">
-
-      <div class="card">
-        <div class="card-head">
-          <span class="label">node</span>
-          <button class="copy ex-copy">Copy</button>
-        </div>
-<pre><span class="k">import</span> { <span class="f">createHabit</span> } <span class="k">from</span> <span class="s">'habicron'</span>
-
-<span class="c">// poll a feed, roughly every 15 min</span>
-<span class="k">const</span> job <span class="p">=</span> <span class="f">createHabit</span>(syncFeed, {
-  every<span class="p">:</span> <span class="s">'15m ~ 2m'</span>,
-})</pre>
-      </div>
-
-      <div class="card">
-        <div class="card-head">
-          <span class="label">react</span>
-          <button class="copy ex-copy">Copy</button>
-        </div>
-<pre><span class="k">import</span> { <span class="f">useHabit</span> } <span class="k">from</span> <span class="s">'habicron/react'</span>
-
-<span class="f">useHabit</span>(runAgent, {
-  controls<span class="p">:</span> <span class="k">true</span>,
-  habits<span class="p">:</span> [
-    { every<span class="p">:</span> <span class="s">'2h ~ 20m'</span> },        <span class="c">// check the cat</span>
-    { times<span class="p">:</span> 2, per<span class="p">:</span> <span class="s">'day'</span>, jitter<span class="p">:</span> <span class="s">'90m'</span> },
-    { every<span class="p">:</span> <span class="s">'3d'</span>, jitter<span class="p">:</span> [<span class="s">'3h'</span>, <span class="s">'5h'</span>] },
-  ],
-})</pre>
-      </div>
-
-      <div class="card wide">
-        <div class="card-head">
-          <span class="label">cli — manage habits like pm2</span>
-          <button class="copy ex-copy">Copy</button>
-        </div>
-<pre><span class="c"># start commands in the background, jittered so you don't look like a bot</span>
-<span class="p">$</span> habit start --name stretch --every <span class="s">"10m ~ 2m"</span> -- notify-send <span class="s">"Stretch"</span>
-<span class="p">$</span> habit start --every 1h --jitter 12m -- node scrape.js
-
-<span class="c"># list what's running — and what each one runs</span>
-<span class="p">$</span> habit list
-<span class="p">  </span>id  name     status   schedule    command           runs  next
-<span class="p">  </span>1   stretch  running  every 10m~2m notify-send …     4     in 8m
-<span class="p">  </span>2   scrape   running  every 1h~12m node scrape.js    1     in 47m
-
-<span class="p">$</span> habit logs stretch   <span class="c"># stop · restart · update · delete · kill</span></pre>
-      </div>
-
-      <div class="card wide">
-        <div class="card-head">
-          <span class="label">vue — read it in your template</span>
-          <button class="copy ex-copy">Copy</button>
-        </div>
-<pre><span class="p">&lt;</span><span class="t">script setup lang="ts"</span><span class="p">&gt;</span>
-<span class="k">const</span> { counter, nextRun, pause, resume } <span class="p">=</span> <span class="f">useHabit</span>(post, {
-  controls<span class="p">:</span> <span class="k">true</span>,
-  every<span class="p">:</span> <span class="s">'20s ~ 4s'</span>,
-})
-<span class="p">&lt;/</span><span class="t">script</span><span class="p">&gt;</span>
-
-<span class="p">&lt;</span><span class="t">template</span><span class="p">&gt;</span>
-  <span class="p">&lt;</span><span class="t">p</span><span class="p">&gt;</span>fired {{ counter }}× · next at {{ nextRun?.toLocaleTimeString() }}<span class="p">&lt;/</span><span class="t">p</span><span class="p">&gt;</span>
-  <span class="p">&lt;</span><span class="t">button</span> @click="pause"<span class="p">&gt;</span>Pause<span class="p">&lt;/</span><span class="t">button</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="t">template</span><span class="p">&gt;</span></pre>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<hr class="divider" />
-
 <section id="use-cases">
   <div class="wrap">
     <div class="sec-head">
@@ -514,6 +434,95 @@
           <li>Reconcile with the upstream API <b>every 15m ~ 2m</b></li>
           <li>Sweep stale sessions <b>every 1h</b></li>
         </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<section id="examples">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Examples</div>
+      <h2>Five ways to use it</h2>
+    </div>
+    <div class="ex-grid">
+
+      <div class="card">
+        <div class="card-head">
+          <span class="label">node</span>
+          <button class="copy ex-copy">Copy</button>
+        </div>
+<pre><span class="k">import</span> { <span class="f">createHabit</span> } <span class="k">from</span> <span class="s">'habicron'</span>
+
+<span class="c">// poll a feed, roughly every 15 min</span>
+<span class="k">const</span> job <span class="p">=</span> <span class="f">createHabit</span>(syncFeed, {
+  every<span class="p">:</span> <span class="s">'15m ~ 2m'</span>,
+})</pre>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="label">browser</span>
+          <button class="copy ex-copy">Copy</button>
+        </div>
+<pre><span class="k">import</span> { <span class="f">useHabit</span> } <span class="k">from</span> <span class="s">'habicron/browser'</span>
+
+<span class="c">// no framework — react via callbacks</span>
+<span class="f">useHabit</span>(refreshWidget, {
+  every<span class="p">:</span> <span class="s">'20s ~ 4s'</span>,
+  onFire<span class="p">:</span> n <span class="p">=></span> badge.textContent <span class="p">=</span> n,
+})</pre>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="label">react</span>
+          <button class="copy ex-copy">Copy</button>
+        </div>
+<pre><span class="k">import</span> { <span class="f">useHabit</span> } <span class="k">from</span> <span class="s">'habicron/react'</span>
+
+<span class="f">useHabit</span>(runAgent, {
+  controls<span class="p">:</span> <span class="k">true</span>,
+  habits<span class="p">:</span> [
+    { every<span class="p">:</span> <span class="s">'2h ~ 20m'</span> },        <span class="c">// check the cat</span>
+    { times<span class="p">:</span> 2, per<span class="p">:</span> <span class="s">'day'</span>, jitter<span class="p">:</span> <span class="s">'90m'</span> },
+  ],
+})</pre>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="label">vue</span>
+          <button class="copy ex-copy">Copy</button>
+        </div>
+<pre><span class="p">&lt;</span><span class="t">script setup lang="ts"</span><span class="p">&gt;</span>
+<span class="k">const</span> { counter, pause } <span class="p">=</span> <span class="f">useHabit</span>(post, {
+  controls<span class="p">:</span> <span class="k">true</span>, every<span class="p">:</span> <span class="s">'20s ~ 4s'</span>,
+})
+<span class="p">&lt;/</span><span class="t">script</span><span class="p">&gt;</span>
+
+<span class="p">&lt;</span><span class="t">template</span><span class="p">&gt;</span> fired {{ counter }}× <span class="p">&lt;/</span><span class="t">template</span><span class="p">&gt;</span></pre>
+      </div>
+
+      <div class="card wide">
+        <div class="card-head">
+          <span class="label">cli — manage habits from your shell</span>
+          <button class="copy ex-copy">Copy</button>
+        </div>
+<pre><span class="c"># start commands in the background, jittered so you don't look like a bot</span>
+<span class="p">$</span> habit start --name stretch --every <span class="s">"10m ~ 2m"</span> -- notify-send <span class="s">"Stretch"</span>
+<span class="p">$</span> habit start --every 1h --jitter 12m -- node scrape.js
+
+<span class="c"># list what's running — and what each one runs</span>
+<span class="p">$</span> habit list
+<span class="p">  </span>id  name     status   schedule    command           runs  next
+<span class="p">  </span>1   stretch  running  every 10m~2m notify-send …     4     in 8m
+<span class="p">  </span>2   scrape   running  every 1h~12m node scrape.js    1     in 47m
+
+<span class="p">$</span> habit logs stretch   <span class="c"># stop · restart · update · delete · kill</span></pre>
       </div>
 
     </div>
