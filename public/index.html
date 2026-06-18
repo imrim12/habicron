@@ -264,11 +264,11 @@
     <div class="nav-links">
       <a href="#install">Install</a>
       <a href="#examples">Examples</a>
-      <a href="#">API</a>
+      <a href="https://github.com/imrim12/habicron#readme">API</a>
     </div>
     <div class="nav-right">
-      <span class="ver">v0.1.0</span>
-      <a href="#" aria-label="GitHub">
+      <span class="ver">v0.2.0</span>
+      <a href="https://github.com/imrim12/habicron" aria-label="GitHub">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></svg>
       </a>
     </div>
@@ -281,16 +281,17 @@
       <div class="eyebrow">by <b>thecodeorigin</b></div>
       <h1>Habits,<br />not cronjobs<span class="dot">.</span></h1>
       <p class="lede">
-        A tiny Vue composable for randomized recurring tasks. Your jobs fire on a
-        human rhythm — close to schedule, never robotically on the dot.
+        A tiny scheduler for randomized recurring tasks — one engine for Node,
+        Vue, React, and your shell. Your jobs fire on a human rhythm — close to
+        schedule, never robotically on the dot.
       </p>
       <div class="features">
-        <b>~1 kB</b> · zero dependencies<br />
-        accurate by default, <b>jittered</b> on demand · SSR‑safe
+        <b>Node</b> · <b>Vue</b> · <b>React</b> · <b>CLI</b> · tiny, zero‑dependency core<br />
+        accurate by default, <b>jittered</b> on demand · no drift · SSR‑safe
       </div>
       <div class="cta-row">
         <a class="btn btn-primary" href="#install">Get started</a>
-        <a class="btn btn-ghost" href="#">View on GitHub</a>
+        <a class="btn btn-ghost" href="https://github.com/imrim12/habicron">View on GitHub</a>
       </div>
     </div>
 
@@ -301,16 +302,16 @@
           <span class="fname">habits.ts</span>
           <span class="live"><span class="pulse"></span>live</span>
         </div>
-<pre class="code"><span class="k">import</span> { <span class="f">useRandomCronjob</span> } <span class="k">from</span> <span class="s">'habicron/vue'</span>
+<pre class="code"><span class="k">import</span> { <span class="f">useHabicron</span> } <span class="k">from</span> <span class="s">'habicron/vue'</span>
 
 <span class="c">// remind me to drink water every hour</span>
-<span class="f">useRandomCronjob</span>(drinkWater, { every<span class="p">:</span> <span class="s">'1h ± 8m'</span> })
+<span class="f">useHabicron</span>(drinkWater, { every<span class="p">:</span> <span class="s">'1h ± 8m'</span> })
 
 <span class="c">// check my cat every 2 hours</span>
-<span class="f">useRandomCronjob</span>(checkCat, { every<span class="p">:</span> <span class="s">'2h ± 20m'</span> })
+<span class="f">useHabicron</span>(checkCat, { every<span class="p">:</span> <span class="s">'2h ± 20m'</span> })
 
 <span class="c">// a whole routine, with controls</span>
-<span class="k">const</span> { nextRun, pause } <span class="p">=</span> <span class="f">useRandomCronjob</span>(routine, {
+<span class="k">const</span> { nextRun, pause } <span class="p">=</span> <span class="f">useHabicron</span>(routine, {
   controls<span class="p">:</span> <span class="k">true</span>,
   habits<span class="p">:</span> [
     { every<span class="p">:</span> <span class="s">'20s'</span>, jitter<span class="p">:</span> [<span class="s">'3s'</span>, <span class="s">'5s'</span>] },
@@ -359,23 +360,25 @@
 
       <div class="card">
         <div class="card-head">
-          <span class="label">one habit</span>
+          <span class="label">node</span>
           <button class="copy ex-copy">Copy</button>
         </div>
-<pre><span class="k">import</span> { <span class="f">useRandomCronjob</span> } <span class="k">from</span> <span class="s">'habicron/vue'</span>
+<pre><span class="k">import</span> { <span class="f">createHabicron</span> } <span class="k">from</span> <span class="s">'habicron'</span>
 
-<span class="c">// drink water, roughly hourly</span>
-<span class="f">useRandomCronjob</span>(() <span class="p">=></span> notify(<span class="s">'Drink water'</span>), {
-  every<span class="p">:</span> <span class="s">'1h ± 8m'</span>,
+<span class="c">// poll a feed, roughly every 15 min</span>
+<span class="k">const</span> job <span class="p">=</span> <span class="f">createHabicron</span>(syncFeed, {
+  every<span class="p">:</span> <span class="s">'15m ± 2m'</span>,
 })</pre>
       </div>
 
       <div class="card">
         <div class="card-head">
-          <span class="label">a daily routine</span>
+          <span class="label">react</span>
           <button class="copy ex-copy">Copy</button>
         </div>
-<pre><span class="f">useRandomCronjob</span>(runAgent, {
+<pre><span class="k">import</span> { <span class="f">useHabicron</span> } <span class="k">from</span> <span class="s">'habicron/react'</span>
+
+<span class="f">useHabicron</span>(runAgent, {
   controls<span class="p">:</span> <span class="k">true</span>,
   habits<span class="p">:</span> [
     { every<span class="p">:</span> <span class="s">'2h ± 20m'</span> },        <span class="c">// check the cat</span>
@@ -387,11 +390,11 @@
 
       <div class="card wide">
         <div class="card-head">
-          <span class="label">read it in your template</span>
+          <span class="label">vue — read it in your template</span>
           <button class="copy ex-copy">Copy</button>
         </div>
 <pre><span class="p">&lt;</span><span class="t">script setup lang="ts"</span><span class="p">&gt;</span>
-<span class="k">const</span> { counter, nextRun, pause, resume } <span class="p">=</span> <span class="f">useRandomCronjob</span>(post, {
+<span class="k">const</span> { counter, nextRun, pause, resume } <span class="p">=</span> <span class="f">useHabicron</span>(post, {
   controls<span class="p">:</span> <span class="k">true</span>,
   every<span class="p">:</span> <span class="s">'20s ± 4s'</span>,
 })

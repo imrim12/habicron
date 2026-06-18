@@ -35,14 +35,18 @@ core controller.
 src/
   core/   index.ts + __test__/   # the engine — types + scheduler, no deps
   node/   index.ts + __test__/   # default entry: re-exports core, headless
-  vue/    index.ts + __test__/   # Vue adapter — useRandomCronjob (refs)
-  react/  index.ts + __test__/   # React adapter — useRandomCronjob (state)
+  vue/    index.ts + __test__/   # Vue adapter — useHabicron (refs)
+  react/  index.ts + __test__/   # React adapter — useHabicron (state)
   cli/    index.ts + __test__/   # `habicron` binary (runs a shell command)
+skills/habicron/SKILL.md         # agent skill describing how to use habicron
 public/index.html                # self-contained landing page (no framework)
 build.config.ts                  # unbuild — emits ESM + CJS + .d.ts
 vitest.config.ts                 # node env by default; jsdom via file docblock
+eslint.config.mjs                # @antfu/eslint-config, strict, type-aware
 tsconfig.json                    # strict typecheck (noEmit)
 package.json                     # ESM, multi-entry exports map, bin
+wrangler.toml                    # Cloudflare Workers static-assets config
+.github/workflows/deploy.yml     # deploys public/ to habit.thecodeorigin.com
 ```
 
 **There IS a build step now.** The package is authored in TypeScript and built
@@ -106,11 +110,11 @@ small named function.
 - **`src/node`** — re-exports the core surface (`createHabicron`, `dur`,
   `normalize`, `resolveJitter`, `longTimeout`) plus a `habicron` alias. Headless;
   the caller drives the controller.
-- **`src/vue`** — `useRandomCronjob` (+ `useHabicron` alias). Creates a
-  controller with `autoStart: typeof window !== 'undefined'`, mirrors its state
+- **`src/vue`** — `useHabicron` (+ deprecated `useRandomCronjob` alias). Creates
+  a controller with `autoStart: typeof window !== 'undefined'`, mirrors its state
   into `readonly` refs via `subscribe`, and disposes on scope teardown.
-- **`src/react`** — `useRandomCronjob` (+ `useHabicron` alias). Creates the
-  controller inside `useEffect` (so it's SSR-safe), mirrors state into
+- **`src/react`** — `useHabicron` (+ deprecated `useRandomCronjob` alias). Creates
+  the controller inside `useEffect` (so it's SSR-safe), mirrors state into
   `useState`, and stops it on unmount. Returns **plain values**, not refs.
 - **`src/cli`** — `parseArgs` / `toOptions` / `main`. Parses flags, builds a
   schedule, and spawns a shell command on each fire. `parseArgs` and `toOptions`
@@ -134,8 +138,8 @@ types first, then make the implementation conform.
     `controls: true` using the **`const O` type parameter**. Without `const`, TS
     widens `controls: true` to `boolean` and the members leak into every call.
     Do not remove `const`.
-- Keep the export surface small. Each adapter exports `useRandomCronjob` and the
-  `useHabicron` alias; do not add more without reason.
+- Keep the export surface small. Each adapter exports `useHabicron` and the
+  deprecated `useRandomCronjob` alias; do not add more without reason.
 
 ---
 
@@ -182,8 +186,9 @@ These are load-bearing. Each maps to a real failure if removed.
   `normalize()` — do not scatter it through the engine.
 - Naming mirrors the domain: `habit`, `every`, `jitter`, `nextRun`, `counter`.
   Keep user-facing names in product terms, not implementation terms.
-- The composable name `useRandomCronjob` is kept for backward compatibility;
-  `useHabicron` is the preferred alias. Keep both — don't rename in place.
+- `useHabicron` is the composable/hook name in Vue and React; `useRandomCronjob`
+  is kept as a deprecated alias for backward compatibility. Keep both — don't
+  remove the alias, and don't rename `useHabicron` in place.
 
 ---
 
@@ -252,8 +257,13 @@ The engine is timer-driven, so tests must control time and randomness.
   document in the README and bump accordingly.
 - Before publishing: `pnpm typecheck && pnpm test && pnpm build`, confirm `files`
   ships only `dist`/`README.md`/`LICENSE`, and that `public/` is **not** packed.
-- `public/index.html` is the marketing page, deployed separately (static host /
-  Pages); it is not part of the package.
+- `public/index.html` is the marketing page; it is **not** part of the npm
+  package. It deploys to **https://habit.thecodeorigin.com** on Cloudflare
+  Workers (static assets) via `.github/workflows/deploy.yml` — triggered on
+  pushes to `main` that touch `public/**`, `wrangler.toml`, or the workflow.
+  The deploy needs repo secrets `CLOUDFLARE_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`
+  (the workflow also has `GITHUB_TOKEN` available). Config lives in
+  `wrangler.toml` (an assets-only Worker, no server script).
 
 ---
 

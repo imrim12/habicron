@@ -1,0 +1,38 @@
+name: Deploy landing page
+
+# Deploys public/ to Cloudflare Workers (static assets) on
+# https://habit.thecodeorigin.com whenever the landing page changes on main.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'public/**'
+      - wrangler.toml
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+# Only one landing-page deploy at a time; newer pushes supersede older runs.
+concurrency:
+  group: deploy-landing
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare Workers
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publish
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

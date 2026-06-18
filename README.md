@@ -67,9 +67,9 @@ process.on('SIGINT', () => { job.stop(); process.exit(0) })
 
 ```vue
 <script setup lang="ts">
-import { useRandomCronjob } from 'habicron/vue'
+import { useHabicron } from 'habicron/vue'
 
-const { counter, nextRun, pause, resume } = useRandomCronjob(post, {
+const { counter, nextRun, pause, resume } = useHabicron(post, {
   controls: true,
   every: '20s ± 4s',
 })
@@ -83,15 +83,15 @@ const { counter, nextRun, pause, resume } = useRandomCronjob(post, {
 
 `counter`, `nextRun` and `isActive` are readonly refs. Control members
 (`pause`, `resume`, `reset`, `isActive`) appear only when `controls: true`.
-`useHabicron` is an alias of `useRandomCronjob`.
+`useHabicron` is the hook; `useRandomCronjob` remains as a deprecated alias.
 
 ## React
 
 ```tsx
-import { useRandomCronjob } from 'habicron/react'
+import { useHabicron } from 'habicron/react'
 
 function Reminder() {
-  const { counter, nextRun, pause } = useRandomCronjob(
+  const { counter, nextRun, pause } = useHabicron(
     () => notify('Drink water'),
     { controls: true, every: '1h ± 8m' },
   )
@@ -110,7 +110,7 @@ effect, so it is SSR-safe; the callback is always read fresh.
 ## Multiple habits
 
 ```ts
-useRandomCronjob(runAgent, {
+useHabicron(runAgent, {
   controls: true,
   habits: [
     { every: '2h ± 20m' }, // check the cat

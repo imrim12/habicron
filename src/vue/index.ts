@@ -1,11 +1,12 @@
-import type { Ref } from 'vue'
-import type { ControlFlags, Schedule } from '../core'
 /**
  * habicron — Vue adapter.
  *
- * Wraps the core engine in Vue refs. The composable name `useRandomCronjob`
- * is kept for backward compatibility; `useHabicron` is the preferred alias.
+ * Wraps the core engine in Vue refs. `useHabicron` is the composable; the old
+ * name `useRandomCronjob` is kept as a deprecated alias for backward
+ * compatibility.
  */
+import type { Ref } from 'vue'
+import type { ControlFlags, Schedule } from '../core'
 import { getCurrentScope, onScopeDispose, readonly, ref } from 'vue'
 import { createHabicron } from '../core'
 
@@ -21,16 +22,16 @@ export interface VueControlFlags {
 }
 
 /** A single inline schedule, or an explicit list of overlapping habits. */
-export type UseRandomCronjobOptions = VueControlFlags & (Schedule | { habits: Schedule[] })
+export type UseHabicronOptions = VueControlFlags & (Schedule | { habits: Schedule[] })
 
-export interface RandomCronjobBase {
+export interface HabicronBase {
   /** Total number of times the callback has fired. */
   readonly counter: Readonly<Ref<number>>
   /** Earliest upcoming fire across all habits, or `null` when stopped. */
   readonly nextRun: Readonly<Ref<Date | null>>
 }
 
-export interface RandomCronjobControls {
+export interface HabicronControls {
   readonly isActive: Readonly<Ref<boolean>>
   pause: () => void
   resume: () => void
@@ -39,8 +40,8 @@ export interface RandomCronjobControls {
 }
 
 /** Control members exist only when `controls: true` is passed. */
-export type UseRandomCronjobReturn<O extends UseRandomCronjobOptions>
-  = RandomCronjobBase & (O extends { controls: true } ? RandomCronjobControls : unknown)
+export type UseHabicronReturn<O extends UseHabicronOptions>
+  = HabicronBase & (O extends { controls: true } ? HabicronControls : unknown)
 
 /**
  * Schedule a callback on randomized recurring intervals — a "habit" engine.
@@ -49,10 +50,10 @@ export type UseRandomCronjobReturn<O extends UseRandomCronjobOptions>
  * Add `jitter` to perturb each fire by a bounded random amount.
  *
  * @example
- * useRandomCronjob(act, { every: '2h ± 5m' })
+ * useHabicron(act, { every: '2h ± 5m' })
  *
  * @example
- * const { counter, nextRun, pause } = useRandomCronjob(act, {
+ * const { counter, nextRun, pause } = useHabicron(act, {
  *   controls: true,
  *   habits: [
  *     { every: '20s', jitter: ['3s', '5s'] },
@@ -60,10 +61,10 @@ export type UseRandomCronjobReturn<O extends UseRandomCronjobOptions>
  *   ],
  * })
  */
-export function useRandomCronjob<const O extends UseRandomCronjobOptions>(
+export function useHabicron<const O extends UseHabicronOptions>(
   callback: () => void | Promise<void>,
   options: O,
-): UseRandomCronjobReturn<O> {
+): UseHabicronReturn<O> {
   const { controls = false } = options ?? ({} as O)
 
   const counter = ref(0)
@@ -93,7 +94,7 @@ export function useRandomCronjob<const O extends UseRandomCronjobOptions>(
 
   const base = { counter: readonly(counter), nextRun: readonly(nextRun) }
   if (!controls)
-    return base as UseRandomCronjobReturn<O>
+    return base as UseHabicronReturn<O>
 
   return {
     ...base,
@@ -104,5 +105,12 @@ export function useRandomCronjob<const O extends UseRandomCronjobOptions>(
   }
 }
 
-/** Preferred alias of {@link useRandomCronjob}, matching the package name. */
-export const useHabicron = useRandomCronjob
+/**
+ * @deprecated Renamed to {@link useHabicron}. Kept for backward compatibility.
+ */
+export const useRandomCronjob = useHabicron
+
+/** @deprecated Renamed to {@link UseHabicronOptions}. */
+export type UseRandomCronjobOptions = UseHabicronOptions
+/** @deprecated Renamed to {@link UseHabicronReturn}. */
+export type UseRandomCronjobReturn<O extends UseHabicronOptions> = UseHabicronReturn<O>
