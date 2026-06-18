@@ -1,7 +1,7 @@
+import { act, renderHook } from '@testing-library/react'
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { act, renderHook } from '@testing-library/react'
-import { useRandomCronjob, useHabicron } from '../index'
+import { useHabicron, useRandomCronjob } from '../index'
 
 describe('useRandomCronjob (react)', () => {
   beforeEach(() => vi.useFakeTimers())

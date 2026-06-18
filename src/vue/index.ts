@@ -1,15 +1,13 @@
+import type { Ref } from 'vue'
+import type { ControlFlags, Schedule } from '../core'
 /**
  * habicron — Vue adapter.
  *
  * Wraps the core engine in Vue refs. The composable name `useRandomCronjob`
  * is kept for backward compatibility; `useHabicron` is the preferred alias.
  */
-import { ref, readonly, getCurrentScope, onScopeDispose, type Ref } from 'vue'
-import {
-  createHabicron,
-  type ControlFlags,
-  type Schedule,
-} from '../core'
+import { getCurrentScope, onScopeDispose, readonly, ref } from 'vue'
+import { createHabicron } from '../core'
 
 export type { Duration, Jitter, Period, Schedule } from '../core'
 
@@ -41,8 +39,8 @@ export interface RandomCronjobControls {
 }
 
 /** Control members exist only when `controls: true` is passed. */
-export type UseRandomCronjobReturn<O extends UseRandomCronjobOptions> =
-  RandomCronjobBase & (O extends { controls: true } ? RandomCronjobControls : {})
+export type UseRandomCronjobReturn<O extends UseRandomCronjobOptions>
+  = RandomCronjobBase & (O extends { controls: true } ? RandomCronjobControls : unknown)
 
 /**
  * Schedule a callback on randomized recurring intervals — a "habit" engine.
@@ -94,7 +92,8 @@ export function useRandomCronjob<const O extends UseRandomCronjobOptions>(
   }
 
   const base = { counter: readonly(counter), nextRun: readonly(nextRun) }
-  if (!controls) return base as UseRandomCronjobReturn<O>
+  if (!controls)
+    return base as UseRandomCronjobReturn<O>
 
   return {
     ...base,
@@ -102,7 +101,7 @@ export function useRandomCronjob<const O extends UseRandomCronjobOptions>(
     pause: ctrl.pause,
     resume: ctrl.resume,
     reset: ctrl.reset,
-  } as UseRandomCronjobReturn<O>
+  }
 }
 
 /** Preferred alias of {@link useRandomCronjob}, matching the package name. */

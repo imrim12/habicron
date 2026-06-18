@@ -14,19 +14,19 @@
 export {
   createHabicron,
   dur,
-  resolveJitter,
-  normalize,
   longTimeout,
+  normalize,
+  resolveJitter,
 } from '../core'
 
 export type {
+  ControlFlags,
   Duration,
+  HabicronController,
+  HabicronOptions,
   Jitter,
   Period,
   Schedule,
-  ControlFlags,
-  HabicronOptions,
-  HabicronController,
 } from '../core'
 
 export { createHabicron as habicron } from '../core'

@@ -146,7 +146,7 @@ describe('createHabicron', () => {
   it('caps jitter at 0.49 * interval so fires cannot reorder', async () => {
     const cb = vi.fn()
     // huge jitter, always max magnitude, always negative sign
-    const seq = [/* offset mag */ 0.999, /* sign */ 0.1, 0.999, 0.1, 0.999, 0.1]
+    const seq = [0.999, /* sign */ 0.1, 0.999, 0.1, 0.999, 0.1]
     let i = 0
     const random = () => seq[i++ % seq.length]
     createHabicron(cb, { every: '10s', jitter: '100s', random })

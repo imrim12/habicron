@@ -1,10 +1,11 @@
 {
   "name": "habicron",
-  "version": "0.2.0",
-  "description": "Schedule callbacks on randomized recurring intervals — habits, not cronjobs. Accurate by default, jittered on demand, with no drift. Works in Node, Vue, React, and the CLI.",
   "type": "module",
-  "license": "MIT",
+  "version": "0.2.0",
+  "packageManager": "pnpm@10.0.0",
+  "description": "Schedule callbacks on randomized recurring intervals — habits, not cronjobs. Accurate by default, jittered on demand, with no drift. Works in Node, Vue, React, and the CLI.",
   "author": "thecodeorigin <nguyenhuunguyeny.ny@gmail.com>",
+  "license": "MIT",
   "homepage": "https://github.com/imrim12/habicron#readme",
   "repository": {
     "type": "git",
@@ -67,9 +68,9 @@
     "habicron": "./dist/cli/index.mjs"
   },
   "files": [
-    "dist",
+    "LICENSE",
     "README.md",
-    "LICENSE"
+    "dist"
   ],
   "engines": {
     "node": ">=18"
@@ -80,6 +81,8 @@
   "scripts": {
     "build": "unbuild",
     "prepublishOnly": "pnpm run build",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -98,19 +101,25 @@
     }
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^9.0.0",
+    "@eslint-react/eslint-plugin": "^5.9.0",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@vitest/coverage-v8": "^2.1.8",
+    "eslint": "^10.5.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "eslint-plugin-vue": "^10.9.2",
     "jsdom": "^25.0.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.7.2",
     "unbuild": "^2.0.0",
     "vitest": "^2.1.8",
-    "vue": "^3.5.13"
+    "vue": "^3.5.13",
+    "vue-eslint-parser": "^10.4.1"
   },
-  "packageManager": "pnpm@10.0.0",
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"

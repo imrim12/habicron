@@ -54,8 +54,8 @@ import { createHabicron } from 'habicron'
 
 const job = createHabicron(() => syncFeed(), { every: '15m ± 2m' })
 
-job.counter   // times fired
-job.nextRun   // Date of the next fire, or null
+job.counter // times fired
+job.nextRun // Date of the next fire, or null
 job.pause()
 job.resume()
 job.stop()
@@ -113,9 +113,9 @@ effect, so it is SSR-safe; the callback is always read fresh.
 useRandomCronjob(runAgent, {
   controls: true,
   habits: [
-    { every: '2h ± 20m' },                       // check the cat
-    { times: 2, per: 'day', jitter: '90m' },     // twice a day
-    { every: '3d', jitter: ['3h', '5h'] },       // every few days
+    { every: '2h ± 20m' }, // check the cat
+    { times: 2, per: 'day', jitter: '90m' }, // twice a day
+    { every: '3d', jitter: ['3h', '5h'] }, // every few days
   ],
 })
 ```
@@ -150,18 +150,18 @@ interface HabicronController {
   readonly counter: number
   readonly isActive: boolean
   readonly nextRun: Date | null
-  start(immediate?: boolean): void
-  stop(): void
-  pause(): void
-  resume(): void
-  reset(): void                       // zero counter, restart if active
-  subscribe(listener: () => void): () => void
+  start: (immediate?: boolean) => void
+  stop: () => void
+  pause: () => void
+  resume: () => void
+  reset: () => void // zero counter, restart if active
+  subscribe: (listener: () => void) => () => void
 }
 
-type ControlFlags = {
-  immediate?: boolean                 // fire once on start
-  autoStart?: boolean                 // default true (adapters gate this for SSR)
-  random?: () => number               // inject a seeded RNG for determinism
+interface ControlFlags {
+  immediate?: boolean // fire once on start
+  autoStart?: boolean // default true (adapters gate this for SSR)
+  random?: () => number // inject a seeded RNG for determinism
 }
 ```
 

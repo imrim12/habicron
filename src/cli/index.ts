@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import type { HabicronOptions, Period, Schedule } from '../core'
 /**
  * habicron — CLI.
  *
@@ -10,7 +11,8 @@
  *   habicron --every 1h --immediate --max 5 -- ./backup.sh
  */
 import { spawn } from 'node:child_process'
-import { createHabicron, type HabicronOptions, type Period, type Schedule } from '../core'
+import process from 'node:process'
+import { createHabicron } from '../core'
 
 export const VERSION = '0.2.0'
 
@@ -61,20 +63,23 @@ export function parseArgs(argv: string[]): ParseResult {
         break
       case '--times': {
         const n = Number(argv[++i])
-        if (!Number.isFinite(n) || n <= 0) return { error: `--times expects a positive number, got "${argv[i]}"` }
+        if (!Number.isFinite(n) || n <= 0)
+          return { error: `--times expects a positive number, got "${argv[i]}"` }
         args.times = n
         break
       }
       case '--per':
         args.per = argv[++i] as Period
-        if (!PERIODS.includes(args.per)) return { error: `--per expects one of ${PERIODS.join(', ')}` }
+        if (!PERIODS.includes(args.per))
+          return { error: `--per expects one of ${PERIODS.join(', ')}` }
         break
       case '--jitter':
         args.jitter = argv[++i]
         break
       case '--max': {
         const n = Number(argv[++i])
-        if (!Number.isFinite(n) || n <= 0) return { error: `--max expects a positive number, got "${argv[i]}"` }
+        if (!Number.isFinite(n) || n <= 0)
+          return { error: `--max expects a positive number, got "${argv[i]}"` }
         args.max = n
         break
       }
@@ -84,7 +89,8 @@ export function parseArgs(argv: string[]): ParseResult {
         i = argv.length
         break
       default:
-        if (arg.startsWith('-')) return { error: `unknown option "${arg}"` }
+        if (arg.startsWith('-'))
+          return { error: `unknown option "${arg}"` }
         // bare token: treat the rest as the command
         args.command = argv.slice(i)
         i = argv.length
@@ -95,14 +101,16 @@ export function parseArgs(argv: string[]): ParseResult {
 }
 
 /** Build {@link HabicronOptions} from parsed CLI args, or return an error. */
-export function toOptions(args: CliArgs): { options?: HabicronOptions; error?: string } {
+export function toOptions(args: CliArgs): { options?: HabicronOptions, error?: string } {
   let schedule: Schedule | null = null
   if (args.every != null) {
     schedule = { every: args.every, ...(args.jitter != null ? { jitter: args.jitter } : {}) }
-  } else if (args.times != null && args.per != null) {
+  }
+  else if (args.times != null && args.per != null) {
     schedule = { times: args.times, per: args.per, ...(args.jitter != null ? { jitter: args.jitter } : {}) }
   }
-  if (!schedule) return { error: 'a schedule is required: use --every <dur> or --times <n> --per <period>' }
+  if (!schedule)
+    return { error: 'a schedule is required: use --every <dur> or --times <n> --per <period>' }
   return { options: { ...schedule, immediate: args.immediate, autoStart: false } }
 }
 
@@ -129,7 +137,7 @@ Examples:
 `
 
 /** Run a shell command, inheriting stdio. Resolves when it exits. */
-function runCommand(command: string[]): Promise<void> {
+async function runCommand(command: string[]): Promise<void> {
   return new Promise((resolve) => {
     const [cmd, ...rest] = command
     const child = spawn(cmd, rest, { stdio: 'inherit', shell: false })
@@ -144,7 +152,7 @@ function runCommand(command: string[]): Promise<void> {
 /** CLI entry. Returns the intended process exit code. */
 export async function main(argv: string[]): Promise<number> {
   const { args, error } = parseArgs(argv)
-  if (error) {
+  if (error != null) {
     process.stderr.write(`[habicron] ${error}\n\n${HELP}`)
     return 1
   }
@@ -162,7 +170,7 @@ export async function main(argv: string[]): Promise<number> {
   }
 
   const { options, error: optError } = toOptions(args)
-  if (optError || !options) {
+  if (optError != null || options == null) {
     process.stderr.write(`[habicron] ${optError}\n\n${HELP}`)
     return 1
   }
@@ -175,13 +183,15 @@ export async function main(argv: string[]): Promise<number> {
       if (args.max != null && job.counter >= args.max) {
         job.stop()
         resolve()
-      } else if (job.nextRun) {
+      }
+      else if (job.nextRun) {
         process.stdout.write(`[habicron] next at ${job.nextRun.toLocaleTimeString()}\n`)
       }
     }, options)
 
     job.start(args.immediate)
-    if (job.nextRun) process.stdout.write(`[habicron] first run at ${job.nextRun.toLocaleTimeString()}\n`)
+    if (job.nextRun)
+      process.stdout.write(`[habicron] first run at ${job.nextRun.toLocaleTimeString()}\n`)
 
     const shutdown = () => {
       job.stop()
@@ -196,11 +206,11 @@ export async function main(argv: string[]): Promise<number> {
 }
 
 // Run only when invoked directly (not when imported by tests).
-const invokedDirectly =
-  typeof process !== 'undefined' && process.argv[1] != null && /habicron|cli[\\/]index/.test(process.argv[1])
+const invokedDirectly
+  = typeof process !== 'undefined' && process.argv[1] != null && /habicron|cli[\\/]index/.test(process.argv[1])
 
 if (invokedDirectly) {
-  main(process.argv.slice(2)).then((code) => {
+  void main(process.argv.slice(2)).then((code) => {
     process.exitCode = code
   })
 }
