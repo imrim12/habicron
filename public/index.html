@@ -203,17 +203,8 @@
   .install-note { margin-top: 16px; font-size: 13px; color: var(--faint); line-height: 1.75; }
   .install-note code { font-family: var(--mono); font-size: 12px; color: var(--dim); }
 
-  /* schedule calculator */
-  .calc {
-    background: var(--bg-panel); border: 1px solid var(--border);
-    border-radius: 14px; padding: 18px;
-  }
-  .calc-head {
-    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
-  }
-  .calc-title { font-family: var(--display); font-weight: 600; font-size: 15px; }
-  .calc-now { font-family: var(--mono); font-size: 12px; color: var(--faint); }
-  .calc-now b { color: var(--green); font-weight: 500; }
+  /* schedule calculator (lives inside the .term browser chrome) */
+  .calc { padding: 18px 20px; }
   .calc-controls { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
   .calc-field { display: flex; align-items: center; gap: 8px; }
   .calc-field label {
@@ -242,9 +233,12 @@
   }
   .calc-out .copy { flex-shrink: 0; }
   .calc-runs-head {
+    display: flex; align-items: baseline; justify-content: space-between;
     font-family: var(--mono); font-size: 11px; text-transform: uppercase;
     letter-spacing: 0.08em; color: var(--faint); margin-bottom: 8px;
   }
+  .calc-now { font-family: var(--mono); font-size: 12px; color: var(--faint); text-transform: none; letter-spacing: 0; }
+  .calc-now b { color: var(--green); font-weight: 500; }
   .calc-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
   .calc-list li {
     font-family: var(--mono); font-size: 13px; color: var(--dim);
@@ -252,6 +246,37 @@
   }
   .calc-list li b { color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
   .calc-list .calc-date { color: var(--faint); font-size: 11.5px; }
+
+  /* ---------- toasts ---------- */
+  .toasts {
+    position: fixed; top: 16px; right: 16px; z-index: 100;
+    display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+    max-width: min(340px, calc(100vw - 32px));
+  }
+  .toast {
+    display: flex; align-items: flex-start; gap: 11px;
+    background: var(--bg-elev); border: 1px solid var(--green-line);
+    border-radius: 12px; padding: 12px 14px; pointer-events: auto;
+    box-shadow: 0 14px 44px -14px rgba(0,0,0,0.8),
+      0 0 0 1px rgba(91,227,125,0.12), 0 0 32px -10px rgba(91,227,125,0.5);
+    animation: toast-in 0.34s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+  .toast.out { animation: toast-out 0.4s ease forwards; }
+  .toast-dot {
+    width: 9px; height: 9px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
+    background: var(--green); box-shadow: 0 0 10px 1px rgba(91,227,125,0.7);
+  }
+  .toast-body { min-width: 0; }
+  .toast-title {
+    font-family: var(--mono); font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--green); margin-bottom: 2px;
+  }
+  .toast-text { font-size: 13.5px; color: var(--text); line-height: 1.4; word-break: break-word; }
+  @keyframes toast-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; } }
+  @keyframes toast-out { to { opacity: 0; transform: translateX(24px); } }
+  @media (prefers-reduced-motion: reduce) {
+    .toast, .toast.out { animation: none; }
+  }
 
   .tabs { display: flex; gap: 4px; margin-bottom: -1px; }
   .tab {
@@ -391,25 +416,55 @@
       <div class="term">
         <div class="term-bar">
           <span class="d"></span><span class="d"></span><span class="d"></span>
-          <span class="fname">habits.ts</span>
+          <span class="fname">remind-me-to-drink-water.ts</span>
           <span class="live"><span class="pulse"></span>live</span>
         </div>
-<pre class="code"><span class="k">import</span> { <span class="f">useHabit</span> } <span class="k">from</span> <span class="s">'habicron/vue'</span>
+        <div class="calc">
+          <div class="calc-controls">
+            <div class="calc-field">
+              <label for="calc-int">Every</label>
+              <input id="calc-int" type="number" min="1" value="20" />
+              <select id="calc-int-unit">
+                <option value="s" selected>sec</option>
+                <option value="m">min</option>
+                <option value="h">hour</option>
+                <option value="d">day</option>
+                <option value="w">week</option>
+              </select>
+            </div>
+            <div class="calc-field">
+              <label for="calc-jit">Jitter ±</label>
+              <input id="calc-jit" type="number" min="0" value="4" />
+              <select id="calc-jit-unit">
+                <option value="s" selected>sec</option>
+                <option value="m">min</option>
+                <option value="h">hour</option>
+              </select>
+            </div>
+          </div>
 
-<span class="c">// remind me to drink water every hour</span>
-<span class="f">useHabit</span>(drinkWater, { every<span class="p">:</span> <span class="s">'1h ~ 8m'</span> })
+          <div class="calc-out">
+            <code id="calc-shape" class="calc-shape">{ every: '20s ~ 4s' }</code>
+            <button class="copy" id="calc-copy-code">Copy code</button>
+          </div>
 
-<span class="c">// check my cat every 2 hours</span>
-<span class="f">useHabit</span>(checkCat, { every<span class="p">:</span> <span class="s">'2h ~ 20m'</span> })
+          <div class="calc-field calc-purpose-field">
+            <label for="calc-purpose">For</label>
+            <input id="calc-purpose" type="text" placeholder="remind me to drink water" />
+          </div>
+          <div class="calc-out">
+            <code id="calc-prompt" class="calc-prompt"></code>
+            <button class="copy" id="calc-copy-prompt">Copy prompt</button>
+          </div>
 
-<span class="c">// a whole routine, with controls</span>
-<span class="k">const</span> { nextRun, pause } <span class="p">=</span> <span class="f">useHabit</span>(routine, {
-  controls<span class="p">:</span> <span class="k">true</span>,
-  habits<span class="p">:</span> [
-    { every<span class="p">:</span> <span class="s">'20s'</span>, jitter<span class="p">:</span> [<span class="s">'3s'</span>, <span class="s">'5s'</span>] },
-    { times<span class="p">:</span> 2, per<span class="p">:</span> <span class="s">'day'</span>, jitter<span class="p">:</span> <span class="s">'2h'</span> },
-  ],
-})</pre>
+          <div class="calc-runs">
+            <div class="calc-runs-head">
+              <span>Next 5 runs</span>
+              <span class="calc-now">now <b id="calc-clock">00:00:00</b></span>
+            </div>
+            <ul id="calc-list" class="calc-list"></ul>
+          </div>
+        </div>
         <div class="term-foot" id="foot">
           <span class="arrow" id="arrow">▸</span>
           <span id="msg">next fire in <span id="cd">00:20</span></span>
@@ -453,53 +508,27 @@
       </div>
 
       <div class="install-col">
-        <div class="calc">
-          <div class="calc-head">
-            <span class="calc-title">Schedule calculator</span>
-            <span class="calc-now">now <b id="calc-clock">00:00:00</b></span>
+        <div class="term">
+          <div class="term-bar">
+            <span class="d"></span><span class="d"></span><span class="d"></span>
+            <span class="fname">habits.ts</span>
           </div>
+<pre class="code"><span class="k">import</span> { <span class="f">useHabit</span> } <span class="k">from</span> <span class="s">'habicron/vue'</span>
 
-          <div class="calc-controls">
-            <div class="calc-field">
-              <label for="calc-int">Every</label>
-              <input id="calc-int" type="number" min="1" value="2" />
-              <select id="calc-int-unit">
-                <option value="s">sec</option>
-                <option value="m">min</option>
-                <option value="h" selected>hour</option>
-                <option value="d">day</option>
-                <option value="w">week</option>
-              </select>
-            </div>
-            <div class="calc-field">
-              <label for="calc-jit">Jitter ±</label>
-              <input id="calc-jit" type="number" min="0" value="0" />
-              <select id="calc-jit-unit">
-                <option value="s">sec</option>
-                <option value="m" selected>min</option>
-                <option value="h">hour</option>
-              </select>
-            </div>
-          </div>
+<span class="c">// remind me to drink water every hour</span>
+<span class="f">useHabit</span>(drinkWater, { every<span class="p">:</span> <span class="s">'1h ~ 8m'</span> })
 
-          <div class="calc-out">
-            <code id="calc-shape" class="calc-shape">{ every: '2h' }</code>
-            <button class="copy" id="calc-copy-code">Copy code</button>
-          </div>
+<span class="c">// check my cat every 2 hours</span>
+<span class="f">useHabit</span>(checkCat, { every<span class="p">:</span> <span class="s">'2h ~ 20m'</span> })
 
-          <div class="calc-field calc-purpose-field">
-            <label for="calc-purpose">For</label>
-            <input id="calc-purpose" type="text" placeholder="remind me to drink water" />
-          </div>
-          <div class="calc-out">
-            <code id="calc-prompt" class="calc-prompt"></code>
-            <button class="copy" id="calc-copy-prompt">Copy prompt</button>
-          </div>
-
-          <div class="calc-runs">
-            <div class="calc-runs-head">Next 5 runs</div>
-            <ul id="calc-list" class="calc-list"></ul>
-          </div>
+<span class="c">// a whole routine, with controls</span>
+<span class="k">const</span> { nextRun, pause } <span class="p">=</span> <span class="f">useHabit</span>(routine, {
+  controls<span class="p">:</span> <span class="k">true</span>,
+  habits<span class="p">:</span> [
+    { every<span class="p">:</span> <span class="s">'20s'</span>, jitter<span class="p">:</span> [<span class="s">'3s'</span>, <span class="s">'5s'</span>] },
+    { times<span class="p">:</span> 2, per<span class="p">:</span> <span class="s">'day'</span>, jitter<span class="p">:</span> <span class="s">'2h'</span> },
+  ],
+})</pre>
         </div>
       </div>
 
@@ -665,6 +694,8 @@
   <span>accurate by default · jittered on demand</span>
 </footer>
 
+<div id="toasts" class="toasts" aria-live="polite" aria-atomic="false"></div>
+
 <script>
   // ---- install tabs ----
   const tabs = document.querySelectorAll(".tab");
@@ -705,57 +736,14 @@
     });
   });
 
-  // ---- live "next fire" ticker: mirrors { every: '20s ~ 4s' } ----
-  const cd = document.getElementById("cd");
-  const countEl = document.getElementById("count");
-  const foot = document.getElementById("foot");
-  const arrow = document.getElementById("arrow");
-  const msg = document.getElementById("msg");
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  let count = 0;
-  const BASE = 20, JIT_MIN = 3, JIT_MAX = 5; // seconds
-  function nextDelay() {
-    const mag = JIT_MIN + Math.random() * (JIT_MAX - JIT_MIN);
-    return BASE + (Math.random() < 0.5 ? -1 : 1) * mag;
-  }
-  let remaining = nextDelay();
-
-  function fmt(s) {
-    s = Math.max(0, Math.ceil(s));
-    const m = String(Math.floor(s / 60)).padStart(2, "0");
-    const sec = String(s % 60).padStart(2, "0");
-    return m + ":" + sec;
-  }
-
-  function tick() {
-    remaining -= 1;
-    if (remaining <= 0) {
-      count++;
-      countEl.textContent = count;
-      msg.innerHTML = 'fired <span style="color:var(--green-bright)">drinkWater()</span> ✓';
-      if (!reduce) foot.classList.add("fired");
-      arrow.textContent = "✓";
-      setTimeout(() => {
-        foot.classList.remove("fired");
-        arrow.textContent = "▸";
-        remaining = nextDelay();
-        msg.innerHTML = 'next fire in <span id="cd">' + fmt(remaining) + "</span>";
-      }, 900);
-    } else {
-      const el = document.getElementById("cd");
-      if (el) el.textContent = fmt(remaining);
-    }
-  }
-  setInterval(tick, 1000);
-
-  // ---- schedule calculator ----
+  // ---- schedule calculator: drives the next-5-runs, the live footer, and toasts ----
   (function () {
     const $ = (id) => document.getElementById(id);
     if (!$("calc-int")) return;
     const UNIT = { s: 1000, m: 60000, h: 3600000, d: 86400000, w: 604800000 };
     const pad = (n) => String(n).padStart(2, "0");
     const clock = (d) => pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     function spec() {
       const iv = Math.max(1, parseInt($("calc-int").value, 10) || 1);
@@ -767,43 +755,94 @@
       return { every, intervalMs: iv * UNIT[iu], jitterMs: jv * UNIT[ju] };
     }
     const shape = () => "{ every: '" + spec().every + "' }";
-    function prompt() {
-      const purpose = ($("calc-purpose").value || "").trim() || "remind me to drink water";
-      return "Use the habicron CLI skill to create a habit every " + spec().every + " to " + purpose;
-    }
-    function nextRuns() {
+    const purpose = () => ($("calc-purpose").value || "").trim() || "remind me to drink water";
+    const prompt = () => "Use the habicron CLI skill to create a habit every " + spec().every + " to " + purpose();
+
+    // one jittered offset (capped at 0.49 × interval, random sign) — same as the engine
+    function offsetMs() {
       const { intervalMs, jitterMs } = spec();
-      const cap = intervalMs * 0.49;
-      const now = Date.now();
-      const out = [];
-      for (let k = 1; k <= 5; k++) {
-        const mag = Math.min(jitterMs * Math.random(), cap);
-        const off = (Math.random() < 0.5 ? -1 : 1) * mag;
-        out.push(new Date(now + k * intervalMs + off));
-      }
-      return out;
+      const mag = Math.min(jitterMs * Math.random(), intervalMs * 0.49);
+      return (Math.random() < 0.5 ? -1 : 1) * mag;
     }
+
     function render() {
       $("calc-shape").textContent = shape();
       $("calc-prompt").textContent = prompt();
       const list = $("calc-list");
       list.innerHTML = "";
-      nextRuns().forEach((d) => {
+      const now = Date.now();
+      for (let k = 1; k <= 5; k++) {
+        const d = new Date(now + k * spec().intervalMs + offsetMs());
         const li = document.createElement("li");
         const date = d.toDateString() === new Date().toDateString() ? "" : ' <span class="calc-date">' + d.toLocaleDateString() + "</span>";
         li.innerHTML = "At <b>" + clock(d) + "</b>" + date;
         list.appendChild(li);
-      });
+      }
     }
-    ["calc-int", "calc-int-unit", "calc-jit", "calc-jit-unit", "calc-purpose"].forEach((id) => {
-      $(id).addEventListener("input", render);
-      $(id).addEventListener("change", render);
+
+    // ---- toasts (top-right) ----
+    const toasts = $("toasts");
+    function toast(text) {
+      if (!toasts) return;
+      const el = document.createElement("div");
+      el.className = "toast";
+      el.innerHTML = '<span class="toast-dot"></span><div class="toast-body"><div class="toast-title">habit fired</div><div class="toast-text"></div></div>';
+      el.querySelector(".toast-text").textContent = text;
+      toasts.appendChild(el);
+      while (toasts.children.length > 3) toasts.removeChild(toasts.firstChild);
+      setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 420); }, 3600);
+    }
+
+    // ---- live footer: counts down to the next fire using the inputs ----
+    const foot = $("foot"), countEl = $("count"), arrow = $("arrow"), msg = $("msg");
+    let fired = 0, remaining = 0;
+    function delaySec() {
+      return Math.max(1, Math.round((spec().intervalMs + offsetMs()) / 1000));
+    }
+    function fmt(s) {
+      s = Math.max(0, Math.ceil(s));
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+      return (h > 0 ? h + ":" + pad(m) : pad(m)) + ":" + pad(sec);
+    }
+    function showCountdown() {
+      msg.innerHTML = 'next fire in <span id="cd">' + fmt(remaining) + "</span>";
+    }
+    function reset() { remaining = delaySec(); showCountdown(); }
+    function tick() {
+      remaining -= 1;
+      if (remaining > 0) {
+        const el = $("cd");
+        if (el) el.textContent = fmt(remaining);
+        return;
+      }
+      fired++;
+      countEl.textContent = fired;
+      const what = purpose();
+      msg.innerHTML = 'fired <span style="color:var(--green-bright)"></span> ✓';
+      msg.querySelector("span").textContent = what;
+      arrow.textContent = "✓";
+      if (!reduce) foot.classList.add("fired");
+      toast(what);
+      setTimeout(() => {
+        foot.classList.remove("fired");
+        arrow.textContent = "▸";
+        reset();
+      }, 900);
+    }
+
+    // wire it up
+    ["calc-int", "calc-int-unit", "calc-jit", "calc-jit-unit"].forEach((id) => {
+      $(id).addEventListener("input", () => { render(); reset(); });
+      $(id).addEventListener("change", () => { render(); reset(); });
     });
+    $("calc-purpose").addEventListener("input", render);
     $("calc-copy-code").addEventListener("click", function () { copy(shape(), this); });
     $("calc-copy-prompt").addEventListener("click", function () { copy(prompt(), this); });
+
     function calcClock() { $("calc-clock").textContent = clock(new Date()); }
-    calcClock();
-    setInterval(calcClock, 1000);
+    calcClock(); setInterval(calcClock, 1000);
     render();
+    reset();
+    setInterval(tick, 1000);
   })();
 </script>
