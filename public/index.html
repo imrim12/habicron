@@ -195,6 +195,11 @@
     display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;
   }
   .install-col { min-width: 0; }
+  .cmd-sub {
+    margin-top: 16px; margin-bottom: 8px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--faint);
+  }
   .install-note { margin-top: 16px; font-size: 13px; color: var(--faint); line-height: 1.75; }
   .install-note code { font-family: var(--mono); font-size: 12px; color: var(--dim); }
 
@@ -434,6 +439,11 @@
         <div class="cmd">
           <code><span class="prompt">$</span><span id="cmd-text">npm i habicron</span></code>
           <button class="copy" id="cmd-copy">Copy</button>
+        </div>
+        <div class="cmd-sub">Add the agent skills (Claude · OpenClaw)</div>
+        <div class="cmd">
+          <code><span class="prompt">$</span><span>npx skills add imrim12/habicron</span></code>
+          <button class="copy" id="skills-copy">Copy</button>
         </div>
         <p class="install-note">
           Then import from <code>habicron</code>, <code>habicron/browser</code>,
@@ -684,6 +694,9 @@
   }
   document.getElementById("cmd-copy").addEventListener("click", function () {
     copy(cmdText.textContent, this);
+  });
+  document.getElementById("skills-copy").addEventListener("click", function () {
+    copy("npx skills add imrim12/habicron", this);
   });
   document.querySelectorAll(".ex-copy").forEach((btn) => {
     btn.addEventListener("click", function () {
