@@ -1,5 +1,5 @@
 ---
-name: node
+name: habicron-node
 description: >-
   Create and set up a recurring "habit" in Node — schedule a function/callback to
   run on a repeating, human-rhythm cadence (gently jittered, no drift). Use

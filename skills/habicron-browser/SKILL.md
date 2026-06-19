@@ -1,5 +1,5 @@
 ---
-name: browser
+name: habicron-browser
 description: >-
   Create and set up a recurring "habit" in a plain browser app (no framework) —
   schedule a function to run on a repeating, human-rhythm cadence, with callbacks

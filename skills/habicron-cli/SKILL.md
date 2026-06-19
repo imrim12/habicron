@@ -1,5 +1,5 @@
 ---
-name: cli
+name: habicron-cli
 description: >-
   Create, set up, and manage recurring "habits" from the terminal — schedule any
   shell command or script to run on a repeating, human-rhythm cadence, then

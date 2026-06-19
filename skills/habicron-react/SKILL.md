@@ -1,5 +1,5 @@
 ---
-name: react
+name: habicron-react
 description: >-
   Create and set up a recurring "habit" in a React app — a hook that schedules a
   function on a repeating, human-rhythm cadence with reactive state. Use whenever

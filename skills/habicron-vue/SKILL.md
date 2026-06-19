@@ -1,5 +1,5 @@
 ---
-name: vue
+name: habicron-vue
 description: >-
   Create and set up a recurring "habit" in a Vue 3 app — a composable that
   schedules a function on a repeating, human-rhythm cadence with reactive state.
