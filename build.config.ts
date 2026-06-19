@@ -23,6 +23,7 @@ export default defineBuildConfig({
     inlineDependencies: true,
     esbuild: {
       target: 'node18',
+      minify: true,
     },
   },
   externals: ['vue', 'react', 'react-dom'],
