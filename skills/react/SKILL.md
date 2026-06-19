@@ -1,15 +1,16 @@
 ---
-name: habicron-react
+name: react
 description: >-
-  Schedule a callback on randomized recurring intervals ("habits") in a React
-  app, as a hook returning plain reactive values. Accurate by default,
-  optionally jittered, no drift, SSR-safe. Use for React components that poll,
-  refresh, or remind on a human rhythm.
+  Create and set up a recurring "habit" in a React app — a hook that schedules a
+  function on a repeating, human-rhythm cadence with reactive state. Use whenever
+  someone wants to create a habit, set up a recurring task, reminder, poller, or
+  auto-refresh in a React component.
 ---
 
-# habicron — React
+# Create a habit in React
 
-`useHabit` is a React hook. It returns plain values (not refs) that re-render on
+Use this to **create a habit** in React. `useHabit` is a React hook: it returns
+plain values (not refs) that re-render on
 change, creates its controller inside an effect (SSR-safe), and stops on unmount.
 
 ```sh

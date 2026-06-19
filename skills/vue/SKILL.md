@@ -1,15 +1,16 @@
 ---
-name: habicron-vue
+name: vue
 description: >-
-  Schedule a callback on randomized recurring intervals ("habits") in a Vue 3
-  app, as a composable that returns reactive refs. Accurate by default,
-  optionally jittered, no drift, SSR-safe. Use for Vue components that poll,
-  refresh, or remind on a human rhythm.
+  Create and set up a recurring "habit" in a Vue 3 app — a composable that
+  schedules a function on a repeating, human-rhythm cadence with reactive state.
+  Use whenever someone wants to create a habit, set up a recurring task,
+  reminder, poller, or auto-refresh in a Vue component.
 ---
 
-# habicron — Vue
+# Create a habit in Vue
 
-`useHabit` is a Vue 3 composable. It returns reactive, readonly refs and cleans
+Use this to **create a habit** in Vue. `useHabit` is a Vue 3 composable: it
+returns reactive, readonly refs and cleans
 up on scope teardown. SSR-safe (no timers during server render).
 
 ```sh

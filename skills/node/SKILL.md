@@ -1,15 +1,17 @@
 ---
-name: habicron-node
+name: node
 description: >-
-  Schedule a callback on randomized recurring intervals ("habits") in a Node
-  server, script, or worker — accurate by default, optionally jittered, no
-  drift. Use when Node code should do something on a human rhythm instead of a
-  fixed cron/setInterval (polling, background sync, agent self-maintenance).
+  Create and set up a recurring "habit" in Node — schedule a function/callback to
+  run on a repeating, human-rhythm cadence (gently jittered, no drift). Use
+  whenever someone wants to create a habit, set up a recurring task, reminder,
+  poller, or background job in a Node server, script, or worker (e.g. "do X
+  every 2 hours", "create a habit that runs twice a day").
 ---
 
-# habicron — Node
+# Create a habit in Node
 
-`createHabit` runs a callback on randomized recurring intervals. Accurate by
+Use this to **create a habit** in Node: `createHabit` runs a callback on a
+repeating, human-rhythm cadence. Accurate by
 default (anchored to a fixed grid, **no drift**); add `jitter` to nudge each
 fire earlier/later within bounds. Headless — you drive the controller.
 

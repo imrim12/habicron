@@ -1,15 +1,19 @@
 ---
-name: habicron-cli
+name: cli
 description: >-
-  Run and manage shell commands on randomized recurring schedules ("habits")
-  from the terminal as OS background tasks — accurate by default, optionally
-  jittered, no drift. Use to schedule scripts/commands on a human rhythm
-  (backups, syncs, scrapers, reminders) and to list/stop/update/delete them.
+  Create, set up, and manage recurring "habits" from the terminal — schedule any
+  shell command or script to run on a repeating, human-rhythm cadence, then
+  list / stop / update / delete them. Use whenever someone wants to create a
+  habit, set up a recurring task, reminder, cron-like job, or background task
+  from the command line (e.g. "remind me to drink water every hour", "create a
+  habit to back up every 6 hours", "run a sync a few times a day").
 ---
 
-# habicron — CLI (`habit`)
+# Create a habit from the terminal (`habit`)
 
-The `habit` command runs any shell command on a randomized recurring schedule.
+Use this to **create and manage habits** from the command line: schedule any
+shell command to run on a repeating, human-rhythm cadence (accurate, gently
+jittered, no drift), and list / stop / update / delete them.
 It works attached, or managed by a background daemon — a lightweight process
 manager for habits.
 
