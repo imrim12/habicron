@@ -270,7 +270,7 @@ reach for a server-side scheduler (e.g. a queue or Durable Object alarms).
 pnpm install
 pnpm typecheck     # tsc --noEmit
 pnpm test          # vitest run
-pnpm build         # unbuild → dist/ (ESM + CJS + .d.ts)
+pnpm prepack         # unbuild → dist/ (ESM + CJS + .d.ts)
 ```
 
 ## License
