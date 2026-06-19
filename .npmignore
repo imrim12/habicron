@@ -1,0 +1,52 @@
+# .npmignore — defensive fallback only.
+#
+# The published file set is controlled by `package.json#files` (an allowlist of
+# dist/, README.md, LICENSE), which TAKES PRECEDENCE over this file — so while
+# `files` is present, this .npmignore has no effect. It exists so that if `files`
+# is ever removed, `npm publish` still ships only the build output.
+#
+# npm always includes: package.json, README, LICENSE, and the entry files.
+# Everything below is dev-only and must never ship.
+
+# Source & tests (we publish the built dist/, not the TypeScript source)
+src/
+**/__test__/
+**/*.test.ts
+**/*.spec.ts
+
+# Tooling & config
+tsconfig.json
+build.config.ts
+vitest.config.ts
+eslint.config.mjs
+.editorconfig
+.npmrc
+.nvmrc
+
+# Lockfiles & dependency dirs
+node_modules/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+bun.lockb
+
+# Repo-only: docs, marketing site, agent skills, CI, infra
+CLAUDE.md
+public/
+skills/
+.github/
+wrangler.toml
+
+# Caches, coverage, editor & OS cruft
+coverage/
+*.tsbuildinfo
+.eslintcache
+.vscode/
+.idea/
+*.log
+.DS_Store
+
+# Stray local scratch files
+.shot.mjs
+.check.mjs
+.tmp_*
