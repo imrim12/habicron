@@ -39,9 +39,9 @@ src/
   vue/     index.ts + __test__/   # Vue adapter — useHabit (refs)
   react/   index.ts + __test__/   # React adapter — useHabit (state)
   cli/     index.ts store.ts daemon.ts + __test__/   # `habit` background task manager
-skills/{node,browser,vue,react,cli}/SKILL.md   # one agent skill per platform
+skills/habicron-{node,browser,vue,react,cli}/SKILL.md   # one agent skill per platform
 public/index.html                # self-contained landing page (no framework)
-build.config.ts                  # unbuild — emits ESM + CJS + .d.ts
+build.config.ts                  # unbuild — emits minified ESM + CJS + .d.ts
 vitest.config.ts                 # node env by default; jsdom via file docblock
 eslint.config.mjs                # @antfu/eslint-config, strict, type-aware
 tsconfig.json                    # strict typecheck (noEmit)
@@ -50,15 +50,14 @@ wrangler.toml                    # Cloudflare Workers static-assets config
 .github/workflows/deploy.yml     # deploys public/ to habit.thecodeorigin.com
 ```
 
-**There IS a build step now.** The package is authored in TypeScript and built
-with [unbuild](https://github.com/unjs/unbuild) to `dist/` (both `.mjs` and
-`.cjs`, with generated `.d.ts`). `package.json#files` ships only `dist`,
-`README.md`, `LICENSE`. `public/` is **not** published — it is the marketing
-page, deployed separately.
+**There is a build step.** The package is authored in TypeScript and built
+with [unbuild](https://github.com/unjs/unbuild) to `dist/` — both `.mjs` and
+`.cjs`, minified, with generated `.d.ts`. `package.json#files` ships only
+`dist`, `README.md`, `LICENSE`. `public/` is **not** published — it is the
+marketing page, deployed separately.
 
-> Historical note: habicron was once a single buildless `index.js`. It is now a
-> built, multi-platform package. Do not reintroduce a root `index.js` or remove
-> the build.
+> habicron is a built, multi-platform package, not a buildless single file.
+> Do not introduce a root `index.js` or remove the build.
 
 ---
 
@@ -229,7 +228,7 @@ pnpm lint:fix       # eslint . --fix
 pnpm typecheck      # tsc --noEmit  — must pass before commit
 pnpm test           # vitest run
 pnpm test:watch     # vitest
-pnpm build          # unbuild → dist/ (ESM + CJS + .d.ts)
+pnpm build          # unbuild → dist/ (minified ESM + CJS + .d.ts)
 ```
 
 `pnpm` is the package manager for this repo. Do not commit a different
