@@ -51,6 +51,17 @@ export default antfu(
       'antfu/no-top-level-await': 'off',
     },
   },
+  {
+    // Type-strict: no casting, no non-null assertions, no `any`. The only
+    // allowed assertion is the JSON-deserialization boundary in cli/store.ts,
+    // which carries an inline eslint-disable explaining why.
+    files: ['src/**/*.ts'],
+    rules: {
+      'ts/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
+      'ts/no-non-null-assertion': 'error',
+      'ts/no-explicit-any': 'error',
+    },
+  },
 )
   // Vue single-file components only (the `.ts` composable uses the strict TS
   // rules instead — see the file header).

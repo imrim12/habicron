@@ -35,19 +35,38 @@ npm i habicron      # or: pnpm add habicron / bun add habicron
 
 ## Schedule shapes
 
-A **habit** is either an interval or a rate:
+A **habit** is an interval (`every`) or a rate (`times` + `per`), with optional
+`jitter`. Every shape:
 
-```ts
-{ every: '2h' }                       // every 2 hours
-{ every: '1h30m' }                    // compound durations
-{ every: '2h ~ 5m' }                  // packed cadence ~ max jitter
-{ every: '20s', jitter: ['3s','5s'] } // bounded jitter, [min, max]
-{ times: 2, per: 'day', jitter: '2h' }// N times per minute|hour|day|week|month|year
-```
+| Shape | Example | Fires |
+| --- | --- | --- |
+| `{ every: Duration }` | `{ every: '2h' }` | every 2 hours, exactly |
+| `{ every: Duration }` (compound) | `{ every: '1h30m' }` | every 90 minutes |
+| `{ every: '<cadence> ~ <jitter>' }` | `{ every: '2h ~ 5m' }` | every 2h, ± up to 5m (packed; `+/-` also works) |
+| `{ every, jitter: Duration }` | `{ every: '20s', jitter: '5s' }` | every 20s, ± up to 5s |
+| `{ every, jitter: [min, max] }` | `{ every: '20s', jitter: ['3s', '5s'] }` | every 20s, ± 3–5s |
+| `{ every, jitter: { min, max } }` | `{ every: '1h', jitter: { min: '5m', max: '15m' } }` | every 1h, ± 5–15m |
+| `{ times, per }` | `{ times: 2, per: 'day' }` | twice a day, evenly spaced |
+| `{ times, per, jitter }` | `{ times: 2, per: 'day', jitter: '2h' }` | twice a day, ± up to 2h |
+| `{ habits: Schedule[] }` | `{ habits: [a, b, c] }` | the **union** of several habits |
 
-Durations are numbers (ms) or strings of `<num><unit>` tokens —
-units: `ms s m h d w mo y`. Jitter sign is always random. In the packed form,
-`~` separates cadence from max jitter (`+/-` works too — both are typeable).
+Plus the control flags (any shape): `immediate?` (fire once on start),
+`autoStart?` (default `true`), `random?` (seeded RNG), `id?` / `name?` (for the
+registry), and — adapters only — `controls?`.
+
+**Durations** are a number (ms) or a string of `<num><unit>` tokens:
+
+| Token | Unit | | Token | Unit |
+| --- | --- | --- | --- | --- |
+| `ms` | milliseconds | | `w` | weeks |
+| `s` | seconds | | `mo` | months (avg 30.44 d) |
+| `m` | minutes | | `y` | years (avg 365.25 d) |
+| `h` | hours | | | |
+| `d` | days | | | |
+
+**`per`** is one of `minute` `hour` `day` `week` `month` `year`. Jitter sign is
+always random (fires land earlier **or** later), and its magnitude is capped at
+`0.49 × interval` so adjacent fires can't reorder.
 
 ## Node
 

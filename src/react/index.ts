@@ -39,10 +39,6 @@ export interface HabitControls {
   reset: () => void
 }
 
-/** Control members exist only when `controls: true` is passed. */
-export type UseHabitReturn<O extends UseHabitOptions>
-  = HabitBase & (O extends { controls: true } ? HabitControls : unknown)
-
 interface State {
   counter: number
   isActive: boolean
@@ -56,7 +52,9 @@ interface State {
  * Add `jitter` to perturb each fire by a bounded random amount.
  *
  * The schedule is captured once when the component mounts; the callback is
- * always read fresh, so closing over changing props is safe.
+ * always read fresh, so closing over changing props is safe. Control members
+ * (`pause`/`resume`/`reset`/`isActive`) are returned only with `controls: true`
+ * — expressed via overloads, so the return type is exact with no casting.
  *
  * @example
  * const { counter, nextRun, pause } = useHabit(act, {
@@ -64,10 +62,18 @@ interface State {
  *   every: '20s ~ 4s',
  * })
  */
-export function useHabit<const O extends UseHabitOptions>(
+export function useHabit(
   callback: () => void | Promise<void>,
-  options: O,
-): UseHabitReturn<O> {
+  options: UseHabitOptions & { controls: true },
+): HabitBase & HabitControls
+export function useHabit(
+  callback: () => void | Promise<void>,
+  options: UseHabitOptions,
+): HabitBase
+export function useHabit(
+  callback: () => void | Promise<void>,
+  options: UseHabitOptions,
+): HabitBase | (HabitBase & HabitControls) {
   const callbackRef = useRef(callback)
   callbackRef.current = callback
 
@@ -82,7 +88,7 @@ export function useHabit<const O extends UseHabitOptions>(
 
   useEffect(() => {
     const ctrl = createHabit(async () => callbackRef.current(), {
-      ...(optionsRef.current as Schedule & ReactControlFlags),
+      ...optionsRef.current,
       autoStart: true,
     })
     controlRef.current = ctrl
@@ -106,9 +112,9 @@ export function useHabit<const O extends UseHabitOptions>(
   const resume = useCallback(() => controlRef.current?.resume(), [])
   const reset = useCallback(() => controlRef.current?.reset(), [])
 
-  const base = { counter: state.counter, nextRun: state.nextRun }
-  if (!options?.controls)
-    return base as UseHabitReturn<O>
+  const base: HabitBase = { counter: state.counter, nextRun: state.nextRun }
+  if (!options.controls)
+    return base
 
   return {
     ...base,

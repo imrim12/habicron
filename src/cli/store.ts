@@ -1,4 +1,4 @@
-import type { HabitOptions, Period, Schedule } from '../core'
+import type { HabitOptions, Period } from '../core'
 /**
  * habicron CLI — durable store.
  *
@@ -54,6 +54,9 @@ export const logFile = (id: string) => join(habitHome(), 'logs', `${id}.log`)
 
 function readJson<T>(file: string, fallback: T): T {
   try {
+    // The one deserialization boundary: JSON.parse is `any`. Files are written
+    // only by this module, so we trust their shape here rather than re-validate.
+    // eslint-disable-next-line ts/consistent-type-assertions -- external-data boundary
     return JSON.parse(readFileSync(file, 'utf8')) as T
   }
   catch {
@@ -201,10 +204,12 @@ export function daemonAlive(): boolean {
 
 /** Turn a stored record into {@link HabitOptions} for the core engine. */
 export function recordToOptions(record: HabitRecord): HabitOptions {
-  const schedule: Schedule = record.every != null
-    ? { every: record.every, ...(record.jitter != null ? { jitter: record.jitter } : {}) }
-    : { times: record.times!, per: record.per!, ...(record.jitter != null ? { jitter: record.jitter } : {}) }
-  return { ...schedule, id: record.id, name: record.name, immediate: record.immediate, autoStart: false }
+  const base = { id: record.id, name: record.name, immediate: record.immediate, autoStart: false }
+  if (record.every != null)
+    return { ...base, every: record.every, ...(record.jitter != null ? { jitter: record.jitter } : {}) }
+  if (record.times != null && record.per != null)
+    return { ...base, times: record.times, per: record.per, ...(record.jitter != null ? { jitter: record.jitter } : {}) }
+  throw new Error(`habit "${record.id}" has no schedule (every, or times + per)`)
 }
 
 /** Human-readable schedule, e.g. `every 10m ~ 2m` or `3×/day ~ 90m`. */

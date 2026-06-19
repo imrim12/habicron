@@ -38,6 +38,11 @@ import {
 export const VERSION = '0.2.0'
 
 const PERIODS: Period[] = ['minute', 'hour', 'day', 'week', 'month', 'year']
+const PERIOD_NAMES: string[] = PERIODS
+
+function isPeriod(value: string | undefined): value is Period {
+  return value != null && PERIOD_NAMES.includes(value)
+}
 
 export interface CliArgs {
   name?: string
@@ -93,11 +98,13 @@ export function parseArgs(argv: string[]): ParseResult {
         args.times = n
         break
       }
-      case '--per':
-        args.per = argv[++i] as Period
-        if (!PERIODS.includes(args.per))
+      case '--per': {
+        const value = argv[++i]
+        if (!isPeriod(value))
           return { error: `--per expects one of ${PERIODS.join(', ')}` }
+        args.per = value
         break
+      }
       case '--jitter':
         args.jitter = argv[++i]
         break
@@ -235,7 +242,14 @@ function cmdStart(rest: string[]): number {
 
 function eachTarget(ref: string, fn: (r: HabitRecord) => void): number {
   const list = loadHabits()
-  const targets = ref === 'all' ? list : (findHabit(list, ref) ? [findHabit(list, ref)!] : [])
+  let targets: HabitRecord[]
+  if (ref === 'all') {
+    targets = list
+  }
+  else {
+    const found = findHabit(list, ref)
+    targets = found ? [found] : []
+  }
   if (targets.length === 0) {
     err(`no habit matching "${ref}"`)
     return 1
@@ -327,7 +341,11 @@ function cmdUpdate(rest: string[]): number {
     patch.immediate = true
   if (args.command.length > 0)
     patch.command = args.command
-  const updated = patchHabit(existing.id, patch)!
+  const updated = patchHabit(existing.id, patch)
+  if (!updated) {
+    err(`no habit matching "${ref}"`)
+    return 1
+  }
   ensureDaemon()
   out(`updated ${describe(updated)}`)
   return 0
@@ -381,7 +399,7 @@ function cmdKill(): number {
     out(`stopped daemon (pid ${d.pid})`)
   }
   catch (e) {
-    err(`could not stop daemon: ${(e as Error).message}`)
+    err(`could not stop daemon: ${e instanceof Error ? e.message : String(e)}`)
     return 1
   }
   return 0

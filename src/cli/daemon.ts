@@ -45,7 +45,8 @@ async function runOnce(record: HabitRecord): Promise<void> {
       child = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], shell: false })
     }
     catch (err) {
-      appendLog(record.id, `[habit] spawn failed: ${(err as Error).message}\n`)
+      const message = err instanceof Error ? err.message : String(err)
+      appendLog(record.id, `[habit] spawn failed: ${message}\n`)
       patchState(record.id, { lastRun: ts.toISOString(), lastExit: null })
       resolve()
       return

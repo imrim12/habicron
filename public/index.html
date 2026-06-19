@@ -191,7 +191,63 @@
   .divider { border: none; border-top: 1px solid var(--border-soft); margin: 0; }
 
   /* ---------- install ---------- */
-  .install { max-width: 720px; }
+  .install-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;
+  }
+  .install-col { min-width: 0; }
+  .install-note { margin-top: 16px; font-size: 13px; color: var(--faint); line-height: 1.75; }
+  .install-note code { font-family: var(--mono); font-size: 12px; color: var(--dim); }
+
+  /* schedule calculator */
+  .calc {
+    background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px;
+  }
+  .calc-head {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+  }
+  .calc-title { font-family: var(--display); font-weight: 600; font-size: 15px; }
+  .calc-now { font-family: var(--mono); font-size: 12px; color: var(--faint); }
+  .calc-now b { color: var(--green); font-weight: 500; }
+  .calc-controls { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .calc-field { display: flex; align-items: center; gap: 8px; }
+  .calc-field label {
+    font-family: var(--mono); font-size: 12px; color: var(--dim); white-space: nowrap;
+  }
+  .calc input, .calc select {
+    background: var(--bg-elev); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 7px 9px; font-family: var(--mono); font-size: 13px;
+  }
+  .calc input[type=number] { width: 62px; }
+  .calc input[type=text] { flex: 1; min-width: 0; }
+  .calc input:focus, .calc select:focus { outline: none; border-color: var(--green-line); }
+  .calc-purpose-field { margin-bottom: 14px; }
+  .calc-out {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    background: var(--bg); border: 1px solid var(--border-soft);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  .calc-shape {
+    font-family: var(--mono); font-size: 13px; color: var(--green-bright);
+    flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap;
+  }
+  .calc-prompt {
+    font-family: var(--mono); font-size: 12px; color: var(--dim);
+    flex: 1; min-width: 0; line-height: 1.5;
+  }
+  .calc-out .copy { flex-shrink: 0; }
+  .calc-runs-head {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--faint); margin-bottom: 8px;
+  }
+  .calc-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+  .calc-list li {
+    font-family: var(--mono); font-size: 13px; color: var(--dim);
+    display: flex; gap: 8px; align-items: baseline;
+  }
+  .calc-list li b { color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
+  .calc-list .calc-date { color: var(--faint); font-size: 11.5px; }
+
   .tabs { display: flex; gap: 4px; margin-bottom: -1px; }
   .tab {
     font-family: var(--mono); font-size: 13px; color: var(--dim);
@@ -279,6 +335,7 @@
     .nav-links { display: none; }
     .ex-grid { grid-template-columns: 1fr; }
     .use-grid { grid-template-columns: 1fr; }
+    .install-grid { grid-template-columns: 1fr; }
     .hero { padding: 56px 0 40px; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -361,19 +418,81 @@
 <hr class="divider" />
 
 <section id="install">
-  <div class="wrap install">
+  <div class="wrap">
     <div class="sec-head">
       <div class="eyebrow">Install</div>
       <h2>Add it to your project</h2>
     </div>
-    <div class="tabs" role="tablist">
-      <button class="tab active" data-cmd="npm i habicron">npm</button>
-      <button class="tab" data-cmd="pnpm add habicron">pnpm</button>
-      <button class="tab" data-cmd="bun add habicron">bun</button>
-    </div>
-    <div class="cmd">
-      <code><span class="prompt">$</span><span id="cmd-text">npm i habicron</span></code>
-      <button class="copy" id="cmd-copy">Copy</button>
+    <div class="install-grid">
+
+      <div class="install-col">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-cmd="npm i habicron">npm</button>
+          <button class="tab" data-cmd="pnpm add habicron">pnpm</button>
+          <button class="tab" data-cmd="bun add habicron">bun</button>
+        </div>
+        <div class="cmd">
+          <code><span class="prompt">$</span><span id="cmd-text">npm i habicron</span></code>
+          <button class="copy" id="cmd-copy">Copy</button>
+        </div>
+        <p class="install-note">
+          Then import from <code>habicron</code>, <code>habicron/browser</code>,
+          <code>habicron/vue</code>, <code>habicron/react</code> — or schedule
+          shell commands with the <code>habit</code> CLI.
+        </p>
+      </div>
+
+      <div class="install-col">
+        <div class="calc">
+          <div class="calc-head">
+            <span class="calc-title">Schedule calculator</span>
+            <span class="calc-now">now <b id="calc-clock">00:00:00</b></span>
+          </div>
+
+          <div class="calc-controls">
+            <div class="calc-field">
+              <label for="calc-int">Every</label>
+              <input id="calc-int" type="number" min="1" value="2" />
+              <select id="calc-int-unit">
+                <option value="s">sec</option>
+                <option value="m">min</option>
+                <option value="h" selected>hour</option>
+                <option value="d">day</option>
+                <option value="w">week</option>
+              </select>
+            </div>
+            <div class="calc-field">
+              <label for="calc-jit">Jitter ±</label>
+              <input id="calc-jit" type="number" min="0" value="0" />
+              <select id="calc-jit-unit">
+                <option value="s">sec</option>
+                <option value="m" selected>min</option>
+                <option value="h">hour</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="calc-out">
+            <code id="calc-shape" class="calc-shape">{ every: '2h' }</code>
+            <button class="copy" id="calc-copy-code">Copy code</button>
+          </div>
+
+          <div class="calc-field calc-purpose-field">
+            <label for="calc-purpose">For</label>
+            <input id="calc-purpose" type="text" placeholder="remind me to drink water" />
+          </div>
+          <div class="calc-out">
+            <code id="calc-prompt" class="calc-prompt"></code>
+            <button class="copy" id="calc-copy-prompt">Copy prompt</button>
+          </div>
+
+          <div class="calc-runs">
+            <div class="calc-runs-head">Next 5 runs</div>
+            <ul id="calc-list" class="calc-list"></ul>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -616,4 +735,62 @@
     }
   }
   setInterval(tick, 1000);
+
+  // ---- schedule calculator ----
+  (function () {
+    const $ = (id) => document.getElementById(id);
+    if (!$("calc-int")) return;
+    const UNIT = { s: 1000, m: 60000, h: 3600000, d: 86400000, w: 604800000 };
+    const pad = (n) => String(n).padStart(2, "0");
+    const clock = (d) => pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+
+    function spec() {
+      const iv = Math.max(1, parseInt($("calc-int").value, 10) || 1);
+      const iu = $("calc-int-unit").value;
+      const jv = Math.max(0, parseInt($("calc-jit").value, 10) || 0);
+      const ju = $("calc-jit-unit").value;
+      let every = iv + iu;
+      if (jv > 0) every += " ~ " + jv + ju;
+      return { every, intervalMs: iv * UNIT[iu], jitterMs: jv * UNIT[ju] };
+    }
+    const shape = () => "{ every: '" + spec().every + "' }";
+    function prompt() {
+      const purpose = ($("calc-purpose").value || "").trim() || "remind me to drink water";
+      return "Use the habicron CLI skill to create a habit every " + spec().every + " to " + purpose;
+    }
+    function nextRuns() {
+      const { intervalMs, jitterMs } = spec();
+      const cap = intervalMs * 0.49;
+      const now = Date.now();
+      const out = [];
+      for (let k = 1; k <= 5; k++) {
+        const mag = Math.min(jitterMs * Math.random(), cap);
+        const off = (Math.random() < 0.5 ? -1 : 1) * mag;
+        out.push(new Date(now + k * intervalMs + off));
+      }
+      return out;
+    }
+    function render() {
+      $("calc-shape").textContent = shape();
+      $("calc-prompt").textContent = prompt();
+      const list = $("calc-list");
+      list.innerHTML = "";
+      nextRuns().forEach((d) => {
+        const li = document.createElement("li");
+        const date = d.toDateString() === new Date().toDateString() ? "" : ' <span class="calc-date">' + d.toLocaleDateString() + "</span>";
+        li.innerHTML = "At <b>" + clock(d) + "</b>" + date;
+        list.appendChild(li);
+      });
+    }
+    ["calc-int", "calc-int-unit", "calc-jit", "calc-jit-unit", "calc-purpose"].forEach((id) => {
+      $(id).addEventListener("input", render);
+      $(id).addEventListener("change", render);
+    });
+    $("calc-copy-code").addEventListener("click", function () { copy(shape(), this); });
+    $("calc-copy-prompt").addEventListener("click", function () { copy(prompt(), this); });
+    function calcClock() { $("calc-clock").textContent = clock(new Date()); }
+    calcClock();
+    setInterval(calcClock, 1000);
+    render();
+  })();
 </script>

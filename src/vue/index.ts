@@ -4,7 +4,7 @@
  * Wraps the core engine in Vue refs via `useHabit`.
  */
 import type { Ref } from 'vue'
-import type { ControlFlags, HabitSummary, Schedule } from '../core'
+import type { HabitSummary, Schedule } from '../core'
 import { getCurrentScope, onScopeDispose, readonly, ref } from 'vue'
 import { createHabit, listHabits, subscribeHabits } from '../core'
 
@@ -37,15 +37,13 @@ export interface HabitControls {
   reset: () => void
 }
 
-/** Control members exist only when `controls: true` is passed. */
-export type UseHabitReturn<O extends UseHabitOptions>
-  = HabitBase & (O extends { controls: true } ? HabitControls : unknown)
-
 /**
  * Schedule a callback on randomized recurring intervals — a "habit" engine.
  *
  * Accurate by default (evenly spaced, anchored to start time, no drift).
- * Add `jitter` to perturb each fire by a bounded random amount.
+ * Add `jitter` to perturb each fire by a bounded random amount. Control members
+ * (`pause`/`resume`/`reset`/`isActive`) are returned only with `controls: true`
+ * — expressed via overloads, so the return type is exact with no casting.
  *
  * @example
  * useHabit(act, { every: '2h ~ 5m' })
@@ -59,18 +57,26 @@ export type UseHabitReturn<O extends UseHabitOptions>
  *   ],
  * })
  */
-export function useHabit<const O extends UseHabitOptions>(
+export function useHabit(
   callback: () => void | Promise<void>,
-  options: O,
-): UseHabitReturn<O> {
-  const { controls = false } = options ?? ({} as O)
+  options: UseHabitOptions & { controls: true },
+): HabitBase & HabitControls
+export function useHabit(
+  callback: () => void | Promise<void>,
+  options: UseHabitOptions,
+): HabitBase
+export function useHabit(
+  callback: () => void | Promise<void>,
+  options: UseHabitOptions,
+): HabitBase | (HabitBase & HabitControls) {
+  const { controls = false } = options
 
   const counter = ref(0)
   const isActive = ref(false)
   const nextRun = ref<Date | null>(null)
 
   const ctrl = createHabit(callback, {
-    ...(options as ControlFlags & Schedule),
+    ...options,
     // SSR guard: don't spin timers during server render.
     autoStart: typeof window !== 'undefined',
   })
@@ -90,9 +96,9 @@ export function useHabit<const O extends UseHabitOptions>(
     })
   }
 
-  const base = { counter: readonly(counter), nextRun: readonly(nextRun) }
+  const base: HabitBase = { counter: readonly(counter), nextRun: readonly(nextRun) }
   if (!controls)
-    return base as UseHabitReturn<O>
+    return base
 
   return {
     ...base,
@@ -112,7 +118,7 @@ export function useHabit<const O extends UseHabitOptions>(
  * const habits = useHabits()
  * // habits.value -> [{ id, name, isActive, counter, nextRun }, …]
  */
-export function useHabits(): Readonly<Ref<HabitSummary[]>> {
+export function useHabits() {
   const habits = ref<HabitSummary[]>([])
   let perHabit: Array<() => void> = []
 
@@ -140,5 +146,5 @@ export function useHabits(): Readonly<Ref<HabitSummary[]>> {
     })
   }
 
-  return readonly(habits) as Readonly<Ref<HabitSummary[]>>
+  return readonly(habits)
 }

@@ -233,7 +233,7 @@ interface Task extends Spec {
 }
 
 function buildTasks(o: HabitOptions): Task[] {
-  const list = 'habits' in o && Array.isArray(o.habits) ? o.habits : [o as Schedule]
+  const list = 'habits' in o ? o.habits : [o]
   const specs = list.map(normalize).filter((s): s is Spec => s != null)
   return specs.map(spec => ({ ...spec, anchor: 0, count: 0, nextTs: null, cancel: null }))
 }
@@ -287,7 +287,7 @@ export function createHabit(
   callback: () => void | Promise<void>,
   options: HabitOptions,
 ): HabitController {
-  const opts = options ?? ({} as HabitOptions)
+  const opts = options
   const { immediate = false, autoStart = true, random = Math.random } = opts
   const id = opts.id ?? `h${++seq}`
   let name = opts.name
@@ -404,9 +404,9 @@ export function createHabit(
     const wasActive = isActive
     if (isActive)
       stop()
-    if (next?.name !== undefined)
+    if (next.name !== undefined)
       name = next.name
-    tasks = buildTasks(next ?? ({} as HabitOptions))
+    tasks = buildTasks(next)
     if (wasActive) {
       start(false)
     }

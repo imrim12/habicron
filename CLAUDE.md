@@ -152,13 +152,21 @@ types first, then make the implementation conform.
 - **`Schedule`** is a discriminated union with `never` guards so `every` and
   `times`/`per` are mutually exclusive at compile time. Preserve that.
 - **Adapters** define their own return types because their shapes differ:
-  - Vue returns `Readonly<Ref<…>>`; React returns plain values.
-  - Both gate control members (`pause`/`resume`/`reset`/`isActive`) behind
-    `controls: true` using the **`const O` type parameter**. Without `const`, TS
-    widens `controls: true` to `boolean` and the members leak into every call.
-    Do not remove `const`.
-- Keep the export surface small. Each adapter exports a single `useHabit`; do
-  not add aliases or extra exports without reason.
+  - Vue returns `Readonly<Ref<…>>`; React/browser return plain values.
+  - They gate control members (`pause`/`resume`/`reset`/`isActive`) behind
+    `controls: true` via **function overloads** (one signature for
+    `options: … & { controls: true }` → `HabitBase & HabitControls`, one for the
+    rest → `HabitBase`). This keeps the return type exact **without any casting**.
+  - The browser adapter has no refs/state, so it surfaces reactivity through
+    **callbacks** (`onActive`/`onFire`/`onChange`) instead of a return shape.
+- Keep the export surface small. Each adapter exports a single `useHabit` (plus
+  `useHabits` where reactive); do not add aliases or extra exports without reason.
+- **Type-strict, no casting.** Lint bans `as` assertions, non-null assertions
+  (`!`), and `any` across `src` (`ts/consistent-type-assertions: never`,
+  `ts/no-non-null-assertion`, `ts/no-explicit-any`). Narrow with `in`/type
+  guards and overloads instead. The single allowed exception is the JSON
+  deserialization boundary in `cli/store.ts`, marked with an inline
+  eslint-disable.
 
 ---
 
